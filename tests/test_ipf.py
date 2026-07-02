@@ -87,3 +87,9 @@ def test_metamorphic_relation():
     assert metamorphic(10.0, 10.0, "==").passed
     assert metamorphic(10.0, 8.0, "<=").passed        # tightening did not raise
     assert not metamorphic(10.0, 12.0, "<=").passed
+
+
+def test_metamorphic_detail_matches_after_before_semantics():
+    r = metamorphic(before=432.0, after=429.0, relation="<=", name="obj_ge_known_optimum")
+    assert r.passed
+    assert "after=429 <= before=432" in r.detail

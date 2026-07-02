@@ -108,9 +108,10 @@ def metamorphic(before: float, after: float, relation: str = "==",
                 rel_tol: float = 1e-6, name: str = "metamorphic") -> OracleResult:
     """Metamorphic / monotonicity oracle (type 7).
 
-    Assert a relation between an output before and after a known input
+    Assert a relation between an output after and before a known input
     transformation (e.g. scaling all costs by k>0 must scale the optimum by k;
     tightening a constraint must not improve a minimization objective).
+    The relation is read as ``after <relation> before``.
     ``relation`` in {"==", "<=", ">=", "<", ">"}.
     """
     denom = max(abs(before), abs(after), 1e-12)
@@ -127,5 +128,5 @@ def metamorphic(before: float, after: float, relation: str = "==",
         raise ValueError(f"unknown relation {relation!r}")
     return OracleResult(
         name=name, passed=passed, residual=residual, tol=rel_tol, certifies=False,
-        detail=f"before={before:.6g} {relation} after={after:.6g}",
+        detail=f"after={after:.6g} {relation} before={before:.6g}",
     )
