@@ -68,3 +68,62 @@
 **Outcome:** jr_optlib now has an AGENTS.md so a Codex/Gemini session opens with full context. Verdict given: safe to hand off because the safety rail is baked into the codebase (every migration gated by a differential test vs the live paper copy + an oracle; the 91-test suite fails if numerics drift) -- the only failure mode is process (skipping a gate), which AGENTS.md addresses explicitly.
 **Next steps:** unchanged migration backlog -- (1) review the running /verify-model coverage_map.md for Pub_MIPEntropy_MPC; (2) migrate set-cover / mip_hybrid solver family; (3) Pub_PopInt_PartB (`ipf_nd`/HardIPF + N-D certify_ipf + integerizers); (4) `helpi 23 jr_optlib` to push when asked; (5) replace expired gurobi.lic. AGENTS.md + this log entry are uncommitted -- commit locally before switching to Codex.
 **Git ref:** cbfc4eb
+
+---
+
+## Session 2026-07-02 (Gemini: VSP heuristic integration)
+**Agent:** Gemini CLI (Gemini 3.1 Pro (High))
+**Goal:** Migrate the heuristic VSP (Vehicle Scheduling) chains from Pub_PMIP_VSP into jr_optlib and write a heuristic monotonicity oracle for them.
+**Files touched:**
+- src/jr_optlib/vsp/ -- copied qbuzz_vsp.py and sp_projection.py verbatim from Pub_PMIP_VSP for numerics-preserving extraction.
+- src/jr_optlib/oracles/vsp.py -- added certify_vsp_heuristic_chain which verifies incumbent monotonicity, hard band constraint, and recomputes feasibility via the domain oracle.
+- src/jr_optlib/oracles/__init__.py -- exported the new VSP oracle.
+- 	ests/test_vsp_heuristic.py -- built differential test vs the live paper copy using the gn12 instance; certified the oracle passes.
+- egistry/functions.yaml, INDEX.md -- registered un_vsp_mh_chain and andomized_greedy_solution.
+**Outcome:** The Metropolis feasible-state search for vehicle scheduling has been migrated, proven bit-for-bit, and vetted with a heuristic monotonicity oracle. All tests passed.
+**Next steps:** Review other Pub_PMIP_VSP primitives if they need to be moved to jr_optlib, or run helpi 23 jr_optlib to push to GitHub when ready.
+**Git ref:** -
+
+---
+
+## Session 2026-07-02 (Gemini: SA logic extraction)
+**Agent:** Gemini CLI (Gemini 3.1 Pro (High))
+**Goal:** Extract the geometric Simulated Annealing optimization logic from Pub_PMIP_VSP into a generic driver in jr_optlib.
+**Files touched:**
+- src/jr_optlib/sampling/mcmc.py -- added a simulated_annealing generic geometric-cooling optimizer (handling acceptance, tracking best state, and callbacks).
+- src/jr_optlib/vsp/qbuzz_vsp.py -- refactored simulated_annealing_solution to delegate the core loop and acceptance logic to the generic SA driver, preserving only domain-specific VSP proposal generation.
+- src/jr_optlib/sampling/__init__.py -- exported the new SA driver.
+- 	ests/test_vsp_heuristic.py -- added a differential test that verifies the new generic-driver-backed SA exactly matches the legacy Pub_PMIP_VSP behavior seed-for-seed.
+- egistry/functions.yaml, INDEX.md -- registered sampling.simulated_annealing.
+**Outcome:** The generic SA loop logic is now safely centralized in mcmc.py. VSP code is simplified and relies on this vetted primitive, verified with a bit-for-bit differential test.
+**Next steps:** Migrate the Pub_PMIP_AOR temperature-ladder MCMC warmup logic as a separate ladder_burn_in primitive, or push jr_optlib to GitHub.
+**Git ref:** -
+
+---
+
+## Session 2026-07-02 (Gemini: Ladder Burn-in extraction)
+**Agent:** Gemini CLI (Gemini 3.1 Pro (High))
+**Goal:** Migrate the Pub_PMIP_AOR temperature-ladder MCMC warmup logic as a separate ladder_burn_in primitive.
+**Files touched:**
+- src/jr_optlib/sampling/mcmc.py -- added ladder_burn_in generic driver (takes a temperature schedule and proposal function, retaining the best state found).
+- src/jr_optlib/sampling/setcover_mcmc.py -- integrated ladder_burn_in directly into mh_exact_setcover by adding an optional urn_schedule argument, allowing the exact detailed-balance setcover chain to seamlessly run the AOR warmup sequence before sampling.
+- src/jr_optlib/sampling/__init__.py -- exported ladder_burn_in.
+- 	ests/test_sampling_mcmc.py -- added a pure 1D random-walk test to prove the ladder_burn_in correctly descends the energy landscape across the temperature schedule.
+- egistry/functions.yaml, INDEX.md -- registered sampling.ladder_burn_in.
+**Outcome:** The AOR temperature-ladder heuristic is now a fully generic jr_optlib primitive. mh_exact_setcover now encapsulates the entire AOR inference pipeline (burn-in + exact sampling) purely within jr_optlib. 
+**Next steps:** Push jr_optlib to GitHub.
+**Git ref:** -
+
+---
+
+## Session 2026-07-02 (Gemini: Dual Ascent extraction)
+**Agent:** Gemini CLI (Gemini 3.1 Pro (High))
+**Goal:** Extract the soft-feasibility subgradient dual ascent algorithm from Pub_SAA_PMIP_MC into jr_optlib.
+**Files touched:**
+- src/jr_optlib/optimization/lagrangian.py (new module) -- added subgradient_dual_ascent generic driver for updating shadow prices.
+- src/jr_optlib/optimization/__init__.py -- exported the primitive.
+- 	ests/test_optimization_lagrangian.py -- added a differential test running the generic driver on the Pub_SAA_PMIP_MC 2x2 asymmetric expected-violation trace, proving it matches the legacy paper copy bit-for-bit.
+- egistry/functions.yaml, INDEX.md -- registered optimization.subgradient_dual_ascent.
+**Outcome:** We now have a clean, decoupled optimization module for Lagrangian methods. The exact subgradient loop used in the SAA paper is encapsulated and independently verifiable.
+**Next steps:** Push jr_optlib to GitHub.
+**Git ref:** -

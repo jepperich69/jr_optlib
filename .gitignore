@@ -1,7 +1,5 @@
 __pycache__/
-*.py[cod]
-*.egg-info/
+*.pyc
 .pytest_cache/
-build/
-dist/
-.ipynb_checkpoints/
+*.log
+_model_checks/

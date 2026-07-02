@@ -31,6 +31,11 @@ Schema: `SCHEMA.md`.
 | `population.swap_repair_zone` | anchor-preserving population integer swap repair | certify_population_margins (CHECKED) | no | vetted |
 | `population.step1_split` | deterministic floor split for population integerization | certify_population_margins (pipeline precondition) | no | vetted |
 | `population.step2_anchor_pps` | anchor-conditioned PPS integer additions | certify_population_margins (CHECKED) | no | vetted |
+| `vsp.run_vsp_mh_chain` | VSP Metropolis local search | certify_vsp_heuristic_chain | no | vetted |
+| `vsp.randomized_greedy_solution` | VSP randomized greedy warm start | -- | no | vetted |
+| `sampling.simulated_annealing` | generic geometric SA optimizer | -- | no | vetted |
+| `sampling.ladder_burn_in` | MCMC temperature ladder burn-in | -- | no | vetted |
+| `optimization.subgradient_dual_ascent` | Generic subgradient dual ascent | -- | no | vetted |
 
 ## Known-answer instances (`instances.yaml`)
 

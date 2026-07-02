@@ -415,3 +415,90 @@
   oracles: [population.certify_population_margins]
   tests: tests/test_population_hard_ipf.py
   certifies: false
+
+- id: vsp.run_vsp_mh_chain
+  name: VSP Metropolis Chain
+  kind: function
+  summary: Metropolis local search for Vehicle Scheduling framed as path-dependent set partitioning.
+  tags: [vsp, vehicle-scheduling, metropolis, heuristic, local-search]
+  status: vetted
+  source: Pub_PMIP_VSP/code/pmip_vsp/vsp_projection.py (numerics-preserving extraction)
+  added: 2026-07-02
+  provenance: >
+    Migration verified against the active PMIP_VSP paper copy on the gn12 instance.
+    Certified by certify_vsp_heuristic_chain: incumbent monotonicity, epsilon band constraint,
+    and domain-oracle feasibility.
+  module: jr_optlib.vsp.vsp_projection
+  signature: "run_vsp_mh_chain(instance, initial_schedules, n_steps, tau_mh, incumbent_obj, epsilon, ...) -> MHChainResult"
+  oracles: [vsp.certify_vsp_heuristic_chain]
+  tests: tests/test_vsp_heuristic.py
+  certifies: false
+
+- id: vsp.randomized_greedy_solution
+  name: VSP Randomized Greedy
+  kind: function
+  summary: Randomized greedy warm start for the VSP Metropolis chain.
+  tags: [vsp, vehicle-scheduling, greedy, heuristic, warm-start]
+  status: vetted
+  source: Pub_PMIP_VSP/code/pmip_vsp/qbuzz_vsp.py (numerics-preserving extraction)
+  added: 2026-07-02
+  provenance: Migration verified bit-for-bit against the active PMIP_VSP paper copy.
+  module: jr_optlib.vsp.qbuzz_vsp
+  signature: "randomized_greedy_solution(instance, seed, alpha=0.25) -> GreedySolution"
+  oracles: []
+  tests: tests/test_vsp_heuristic.py
+  certifies: false
+
+- id: sampling.simulated_annealing
+  name: Generic Simulated Annealing
+  kind: function
+  summary: Classical geometric-cooling simulated annealing driver for optimization.
+  tags: [sampling, optimization, simulated-annealing, generic, mcmc]
+  status: vetted
+  source: jr_optlib.sampling.mcmc (extracted from Pub_PMIP_VSP)
+  added: 2026-07-02
+  provenance: >
+    Migrated from Pub_PMIP_VSP. Verified via differential test against the active
+    paper copy's vehicle-scheduling SA. Bit-for-bit equivalence proven under fixed
+    random seed, proving the generic driver encapsulates the domain-specific loop.
+  module: jr_optlib.sampling.mcmc
+  signature: "simulated_annealing(init_state, energy_fn, propose_fn, init_temp, cooling_rate, n_steps, seed, on_accept) -> (best_state, best_energy, stats)"
+  oracles: []
+  tests: tests/test_vsp_heuristic.py
+  certifies: false
+
+- id: sampling.ladder_burn_in
+  name: MCMC Temperature Ladder Burn-in
+  kind: function
+  summary: Generic driver for hot-to-cold temperature schedule burn-in before MCMC sampling.
+  tags: [sampling, mcmc, burn-in, generic]
+  status: vetted
+  source: jr_optlib.sampling.mcmc (extracted from Pub_PMIP_AOR)
+  added: 2026-07-02
+  provenance: >
+    Migrated the temperature ladder loop from Pub_PMIP_AOR (originally in anneal_then_cold_sample).
+    The primitive takes a generic `propose_fn` and temperature schedule, retaining the
+    best state found to seed subsequent sampling phases.
+  module: jr_optlib.sampling.mcmc
+  signature: "ladder_burn_in(init_state, energy_fn, propose_fn, burn_schedule, steps_per_temp, seed) -> (best_state, best_energy, stats)"
+  oracles: []
+  tests: tests/test_sampling_mcmc.py
+  certifies: false
+
+- id: optimization.subgradient_dual_ascent
+  name: Subgradient Dual Ascent
+  kind: function
+  summary: Generic driver for subgradient dual ascent for soft-constrained optimization.
+  tags: [optimization, lagrangian, dual-ascent, soft-constraints, generic]
+  status: vetted
+  source: jr_optlib.optimization.lagrangian (extracted from Pub_SAA_PMIP_MC)
+  added: 2026-07-02
+  provenance: >
+    Migrated from Pub_SAA_PMIP_MC's logsum_toy example. A generic subgradient ascent loop
+    that takes an inner primal solver and a constraint violation function, isolating the 
+    subgradient-step logic and the stopping criterion into a reusable optimization primitive.
+  module: jr_optlib.optimization.lagrangian
+  signature: "subgradient_dual_ascent(init_lam, inner_solve_fn, gap_fn, alpha, max_iter, tol, lam_min) -> (lam, x, gap, feasible, iters)"
+  oracles: []
+  tests: tests/test_optimization_lagrangian.py
+  certifies: false
