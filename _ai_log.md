@@ -16,6 +16,6 @@
 - `tests/test_ipf.py` + conftest -- 16 oracle-backed tests.
 - `.claude/CLAUDE.md` filled; `.gitignore`.
 **Outcome:** All 16 tests pass; end-to-end demo on real OR-Library scp41 works (greedy=CHECKED, injected fault=FAIL). `ipf_2d` vetted and certified. Delivery skill `/verify-model` built at `~/.claude/skills/verify-model/`. Installed pytest + pyyaml into miniconda base env. Confirmed the `mip_hybrid` 6x-duplication and the double-defined `round_transport_greedy_push` (population_transport.py:789 and :882).
-**Next steps:** git init + first commit (deferred -- not yet requested); migrate the transport rounding routines and mip_hybrid one function at a time (library-vs-old-copy differential as the migration test); vendor rail582; add assignment/MCF functions wired to the scipy/networkx references already registered.
-**Git ref:** (no repo yet)
+**Next steps:** migrate the transport rounding routines and mip_hybrid one function at a time (library-vs-old-copy differential as the migration test); vendor rail582; add assignment/MCF functions wired to the scipy/networkx references already registered. GitHub push (helpi 23) not done -- local only, awaiting user request.
+**Git ref:** dd09fc6 (local; initial commit, 27 files)
 

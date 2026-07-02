@@ -8,6 +8,9 @@ Schema: `SCHEMA.md`.
 | id | summary | oracles | certifies | status |
 |----|---------|---------|-----------|--------|
 | `transport.ipf_2d` | IPF / raking (2D) -- KL projection onto marginals | marginal_residual, ipf_scaling_form, ipf_reference | yes | vetted |
+| `transport.sinkhorn_balanced` | entropic OT (Sinkhorn) coupling | certify_sinkhorn (marginals + scaling form vs K) | yes | vetted |
+| `transport.sinkhorn_balanced_uv` | Sinkhorn returning (u, v) scalings | certify_sinkhorn | yes | vetted |
+| `transport.make_transport` | seeded balanced transport instance | -- | no | vetted |
 | `transport.make_contingency2d` | seeded 2D marginals (planted instance) | -- | no | vetted |
 
 ## Known-answer instances (`instances.yaml`)

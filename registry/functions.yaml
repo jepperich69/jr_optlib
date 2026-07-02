@@ -21,6 +21,55 @@
   tests: tests/test_ipf.py
   certifies: true
 
+- id: transport.sinkhorn_balanced
+  name: Sinkhorn (entropic OT, balanced)
+  kind: function
+  summary: Entropic optimal transport via Sinkhorn scaling of K=exp(-C/tau); returns the coupling.
+  tags: [transport, optimal-transport, sinkhorn, entropic, matrix-scaling]
+  status: vetted
+  source: Pub_MIPEntropy_MPC/code/mip_hybrid/apps/population_transport.py (numerics-preserving migration)
+  added: 2026-07-02
+  provenance: >
+    Migration verified bit-for-bit against the old paper copy on the paper's
+    own instances (tests/test_sinkhorn.py::test_migration_matches_old_copy, 18
+    cases). Certified by certify_sinkhorn: matching marginals + diagonal-scaling
+    form relative to K=exp(-C/tau) uniquely determine the entropic-OT plan.
+  module: jr_optlib.transport.sinkhorn
+  signature: "sinkhorn_balanced(a, b, C, tau=0.05, iters=500, tol=1e-9) -> (X, elapsed)"
+  oracles: [transport.certify_sinkhorn, transport.marginal_residual, transport.ipf_scaling_form]
+  tests: tests/test_sinkhorn.py
+  certifies: true
+
+- id: transport.sinkhorn_balanced_uv
+  name: Sinkhorn with scalings
+  kind: function
+  summary: As sinkhorn_balanced but also returns the (u, v) scaling vectors (for reduced-cost rounding).
+  tags: [transport, optimal-transport, sinkhorn, entropic]
+  status: vetted
+  source: Pub_MIPEntropy_MPC/code/mip_hybrid/apps/population_transport.py (numerics-preserving migration)
+  added: 2026-07-02
+  provenance: Same algorithm/oracle as sinkhorn_balanced; returns (X, u, v, time).
+  module: jr_optlib.transport.sinkhorn
+  signature: "sinkhorn_balanced_uv(a, b, C, tau=0.05, iters=500, tol=1e-9) -> (X, u, v, elapsed)"
+  oracles: [transport.certify_sinkhorn]
+  tests: tests/test_sinkhorn.py
+  certifies: true
+
+- id: transport.make_transport
+  name: Seeded balanced transport instance
+  kind: function
+  summary: Deterministic seeded generator of integer supply/demand (summing to N) and a cost matrix.
+  tags: [transport, instance-generator, seeded, planted]
+  status: vetted
+  source: Pub_MIPEntropy_MPC/code/mip_hybrid/apps/population_transport.py
+  added: 2026-07-02
+  provenance: Guarantees supply.sum()==demand.sum()==N; deterministic given seed.
+  module: jr_optlib.transport.sinkhorn
+  signature: "make_transport(m, n, N, seed=1, cost_scale=1.0) -> TransportInstance"
+  oracles: []
+  tests: tests/test_sinkhorn.py
+  certifies: false
+
 - id: transport.make_contingency2d
   name: Synthetic 2D marginals
   kind: function

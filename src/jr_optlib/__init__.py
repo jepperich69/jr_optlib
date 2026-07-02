@@ -12,5 +12,7 @@ See README.md and registry/SCHEMA.md.
 __version__ = "0.1.0"
 
 from jr_optlib.transport.ipf import ipf_2d, make_contingency2d
+from jr_optlib.transport.sinkhorn import sinkhorn_balanced, make_transport
 
-__all__ = ["ipf_2d", "make_contingency2d", "__version__"]
+__all__ = ["ipf_2d", "make_contingency2d",
+           "sinkhorn_balanced", "make_transport", "__version__"]

@@ -145,6 +145,25 @@ def ipf_reference(X: np.ndarray, row_marg: np.ndarray, col_marg: np.ndarray,
     )
 
 
+def certify_sinkhorn(X: np.ndarray, a: np.ndarray, b: np.ndarray, C: np.ndarray,
+                     tau: float = 0.05, tol: float = 1e-6) -> Tuple[list, bool]:
+    """Certify an entropic-OT (Sinkhorn) plan. Returns (results, certified).
+
+    The entropic-OT solution is the unique diagonal scaling of the Gibbs kernel
+    K = exp(-C/tau) with marginals a, b. So matching marginals
+    (marginal_residual) AND scaling form relative to K (ipf_scaling_form with
+    q=K) together certify X is the correct plan -- without re-running Sinkhorn.
+    """
+    K = np.exp(-np.asarray(C, float) / max(tau, 1e-12))
+    r_marg = marginal_residual(X, a, b, tol=tol)
+    r_form = ipf_scaling_form(X, q=K, tol=tol)
+    results = [r_marg, r_form]
+    certified = r_marg.passed and r_form.passed
+    if certified:
+        r_form.certifies = True
+    return results, certified
+
+
 def certify_ipf(X: np.ndarray, row_marg: np.ndarray, col_marg: np.ndarray,
                 q: Optional[np.ndarray] = None,
                 tol: float = 1e-6) -> Tuple[list, bool]:
