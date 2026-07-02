@@ -1,0 +1,50 @@
+# Known-answer benchmark instances (oracle type 4/6). Schema: registry/SCHEMA.md
+# See oracle_bank/setcover/known_optima.yaml for the full OR-Library optima table.
+
+- id: setcover.scp41
+  name: OR-Library SCP scp41
+  kind: instance
+  summary: 200x1000 weighted set-cover instance with proven optimum 429.
+  tags: [set-cover, orlib, benchmark, known-optimum]
+  status: vetted
+  source: OR-Library (Beasley); vendored from Pub_MIPEntropy_MPC/code/data/orlib_scp/scp41.txt
+  added: 2026-07-02
+  provenance: >
+    Optimum 429 is the proven optimal value published in OR-Library. Instance
+    vendored into oracle_bank/setcover/orlib/scp41.txt; loader + end-to-end
+    check in oracle_bank/demo_scp41.py.
+  problem_type: set-cover
+  file: oracle_bank/setcover/orlib/scp41.txt
+  known_optimum: 429
+  optimum_kind: exact
+
+- id: setcover.rail582
+  name: OR-Library rail582
+  kind: instance
+  summary: Unicost rail set-cover instance with proven optimum 211 (raw file not yet vendored).
+  tags: [set-cover, orlib, rail, benchmark, known-optimum, unicost]
+  status: experimental   # registered; raw instance download-on-demand
+  source: OR-Library (Beasley), rail582.txt
+  added: 2026-07-02
+  provenance: >
+    Optimum 211 from OR-Library. Only run logs exist locally in
+    Pub_MIPEntropy_MPC; the raw instance must be downloaded before use. Record
+    the download in oracle_bank/_retrieved_sources.md when vendored.
+  problem_type: set-cover
+  file: null
+  known_optimum: 211
+  optimum_kind: exact
+
+- id: transport.seeded_contingency2d
+  name: Seeded 2D contingency generator
+  kind: instance
+  summary: Planted, deterministic row/column marginals for IPF (generator, not a file).
+  tags: [transport, population-synthesis, planted, seeded]
+  status: vetted
+  source: jr_optlib.transport.make_contingency2d
+  added: 2026-07-02
+  provenance: Feasibility (row.sum()==col.sum()==N) asserted by the generator; deterministic given seed.
+  problem_type: transport
+  file: "call: make_contingency2d(R, C, N, seed)"
+  known_optimum: null
+  optimum_kind: bound

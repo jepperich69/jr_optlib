@@ -1,0 +1,22 @@
+# Known optima for OR-Library set-cover instances (Beasley).
+# optimum_kind: exact = proven optimal; best-known = best published bound.
+# Source: J.E. Beasley, OR-Library, http://people.brunel.ac.uk/~mastjjb/jeb/orlib/scpinfo.html
+
+instances:
+  scp41: { optimum: 429, optimum_kind: exact, file: orlib/scp41.txt, vendored: true }
+  scp42: { optimum: 512, optimum_kind: exact, file: null, vendored: false }
+  scp43: { optimum: 516, optimum_kind: exact, file: null, vendored: false }
+  scp44: { optimum: 494, optimum_kind: exact, file: null, vendored: false }
+  scp45: { optimum: 512, optimum_kind: exact, file: null, vendored: false }
+  scp46: { optimum: 560, optimum_kind: exact, file: null, vendored: false }
+  scp47: { optimum: 430, optimum_kind: exact, file: null, vendored: false }
+  scp48: { optimum: 492, optimum_kind: exact, file: null, vendored: false }
+  scp49: { optimum: 641, optimum_kind: exact, file: null, vendored: false }
+
+  # Rail set-cover instances (unicost). Raw instances not vendored here yet --
+  # download on demand from OR-Library (rail507.txt etc). Registered so the
+  # index can answer "do we have a known-optimum rail instance?".
+  rail507:  { optimum: 174, optimum_kind: exact, file: null, vendored: false }
+  rail516:  { optimum: 182, optimum_kind: exact, file: null, vendored: false }
+  rail582:  { optimum: 211, optimum_kind: exact, file: null, vendored: false }
+  rail2536: { optimum: 691, optimum_kind: best-known, file: null, vendored: false }

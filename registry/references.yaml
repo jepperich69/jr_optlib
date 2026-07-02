@@ -1,0 +1,55 @@
+# Trusted reference implementations for differential oracles. Schema: registry/SCHEMA.md
+# These are independent, widely-used implementations used ONLY to cross-check
+# jr_optlib functions -- never as the shipped implementation.
+
+- id: ref.ipf_logspace
+  name: Log-space raking (in-house independent)
+  kind: reference
+  summary: IPF reimplemented in additive log-space with scipy.special.logsumexp.
+  tags: [transport, ipf, differential]
+  status: vetted
+  source: jr_optlib.oracles.transport._reference_ipf_logspace
+  added: 2026-07-02
+  provenance: Different numerical route (additive/logsumexp) from ipf_2d's multiplicative sweep; agreement is a genuine differential test.
+  backend: custom
+  validates: [transport.ipf_2d]
+  import: "from jr_optlib.oracles.transport import ipf_reference"
+
+- id: ref.scipy_linear_sum_assignment
+  name: scipy Hungarian assignment
+  kind: reference
+  summary: Exact optimal assignment; reference for assignment / balanced integer transport corners.
+  tags: [assignment, transport, exact]
+  status: vetted
+  source: scipy.optimize.linear_sum_assignment
+  added: 2026-07-02
+  provenance: Standard, widely-validated exact Hungarian/Jonker-Volgenant implementation.
+  backend: scipy
+  validates: []   # wire when an assignment function is added to jr_optlib
+  import: "from scipy.optimize import linear_sum_assignment"
+
+- id: ref.networkx_min_cost_flow
+  name: networkx min-cost flow
+  kind: reference
+  summary: Exact min-cost-flow reference for transportation/MCF rounding checks.
+  tags: [min-cost-flow, transport, exact]
+  status: vetted
+  source: networkx.min_cost_flow
+  added: 2026-07-02
+  provenance: Standard reference MCF; use as differential oracle for the transport rounding routines when migrated.
+  backend: networkx
+  validates: []
+  import: "import networkx as nx  # nx.min_cost_flow"
+
+- id: ref.pot_sinkhorn
+  name: POT Sinkhorn / EMD
+  kind: reference
+  summary: Optimal-transport reference (entropic Sinkhorn and exact EMD).
+  tags: [transport, sinkhorn, optimal-transport]
+  status: experimental   # POT not installed in base; optional dep
+  source: "POT (Python Optimal Transport): ot.sinkhorn, ot.emd"
+  added: 2026-07-02
+  provenance: Reference for sinkhorn_balanced and transport objective when those are migrated. Install via pip install pot.
+  backend: pot
+  validates: []
+  import: "import ot  # ot.sinkhorn(a, b, C, reg); ot.emd(a, b, C)"

@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "deny": [
+      "Read(C:/Users/rich/OneDrive*/JR/AI_auto/**)",
+      "Read(C:/Users/rich/AppData/**)",
+      "Read(C:/Users/rich/.claude/**)"
+    ]
+  }
+}

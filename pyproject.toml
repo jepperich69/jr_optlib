@@ -1,0 +1,37 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "jr_optlib"
+version = "0.1.0"
+description = "Vetted, oracle-tested optimization primitives for JR research papers"
+readme = "README.md"
+requires-python = ">=3.10"
+authors = [{ name = "Jeppe Rich" }]
+dependencies = [
+    "numpy>=1.24",
+]
+
+# Oracles and reference implementations used only for validation/testing.
+# Kept out of the runtime dependency set so a paper importing a vetted
+# function does not have to install the whole validation stack.
+[project.optional-dependencies]
+oracles = [
+    "scipy>=1.10",
+]
+oracles-full = [
+    "scipy>=1.10",
+    "pot>=0.9",        # optimal-transport reference impls (Sinkhorn, EMD)
+    "networkx>=3.0",   # min-cost-flow reference
+]
+test = [
+    "pytest>=7.0",
+    "scipy>=1.10",
+]
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
