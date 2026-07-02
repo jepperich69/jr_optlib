@@ -70,6 +70,21 @@
 
 ---
 
+## Session 2026-07-02 (Codex: PopInt PPS + verification)
+**Agent:** Codex GPT-5
+**Goal:** Finish the current PopInt integerization migration slice and run a model-check coverage pass on Pub_PopInt_PartB.
+**Files touched:**
+- `src/jr_optlib/population/integerize.py` -- added `step1_split`, `pps_without_replacement`, and `step2_anchor_pps` as numerics-preserving migrations from the PopInt large-scale script.
+- `src/jr_optlib/population/__init__.py` -- exported the new integerization helpers.
+- `tests/test_population_hard_ipf.py` -- added old-vs-new differential tests for deterministic split and fixed-seed anchor PPS, plus margin certification.
+- `registry/functions.yaml`, `registry/INDEX.md` -- registered `population.step1_split` and `population.step2_anchor_pps`.
+- `Pub_PopInt_PartB/_model_checks/2026-07-02_13-56-42/` -- generated inline `/verify-model` equivalent (`verify_model.py`, `coverage_map.md`) against stored large-scale result artifacts.
+**Outcome:** Full `jr_optlib` suite passes: 103 tests. PPS migration committed as `e573bdb`. PopInt model check verdict totals: CERTIFIED=2, CHECKED=1, FAIL=4, UNVALIDATED=2. Certified: both `integer_table.csv` and `integer_repaired.csv` preserve AgeGender anchors. Failed: fractional fit misses some non-anchor targets; pre-repair and repaired integer tables still miss non-anchor target margins; stored residual diagnostic is nonzero. Unvalidated: overlap/theta plots and runtime claims need dedicated oracles.
+**Next steps:** Decide whether the PopInt margin failures are acceptable approximation claims or require algorithm/result repair. If they are intended approximations, revise the result claims and add tolerance-based/relative-gap oracles; if exact margins are intended, debug the repair algorithm or target wiring. Add an overlap-distribution oracle before validating theta/overlap figures.
+**Git ref:** e573bdb
+
+---
+
 ## Session 2026-07-02 (handoff prep for Codex)
 **Agent:** Claude Opus 4.8
 **Goal:** User is low on tokens and wants to continue the jr_optlib migration ("restructuring") in Codex or Gemini. Assess whether that is trustworthy and make sure the next agent boots with full context.
