@@ -37,6 +37,7 @@ from jr_optlib.oracles.setcover import (
     setcover_feasible,
     setcover_cost,
 )
+from jr_optlib.oracles.population import certify_population_margins
 
 __all__ = [
     "OracleResult",
@@ -57,4 +58,5 @@ __all__ = [
     "setcover_cost",
     "matrix_to_covers",
     "certify_setcover_solution",
+    "certify_population_margins",
 ]

@@ -338,3 +338,23 @@
   oracles: [core.gap_certificate, setcover.certify_setcover_solution]
   tests: tests/test_setcover_entropy.py
   certifies: true
+
+- id: population.HardIPF
+  name: Hard-coded high-dimensional IPF
+  kind: function
+  summary: Pandas-backed N-dimensional IPF over a long population table and arbitrary marginal constraints.
+  tags: [population-synthesis, ipf, raking, high-dimensional, pandas, popint]
+  status: vetted
+  source: Pub_PopInt_PartB/Large Scale/Intege_Paper_Minimal_SWAP_ARC.py (numerics-preserving migration)
+  added: 2026-07-02
+  provenance: >
+    Migration verified bit-for-bit against the active PopInt large-scale script
+    on a synthetic multi-margin zone. Certified by
+    certify_population_margins: every fitted weighted marginal matches the
+    supplied target constraints within tolerance. This is the first PopInt
+    integration slice; anchor PPS and swap-repair remain paper-local.
+  module: jr_optlib.population.hard_ipf
+  signature: "HardIPF(seed_df, constraints, weight_col='x').fit(tol=1e-7, max_iters=200, verbose=True) -> (w, ok, n_iter, max_rel_err)"
+  oracles: [population.certify_population_margins]
+  tests: tests/test_population_hard_ipf.py
+  certifies: true

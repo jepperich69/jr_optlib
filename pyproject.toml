@@ -27,6 +27,9 @@ transport-lp = [
 setcover-gurobi = [
     "gurobipy>=13.0",
 ]
+population = [
+    "pandas>=2.0",
+]
 oracles-full = [
     "scipy>=1.10",
     "pot>=0.9",        # optimal-transport reference impls (Sinkhorn, EMD)
@@ -37,6 +40,7 @@ test = [
     "scipy>=1.10",
     "pulp>=2.7",
     "gurobipy>=13.0",
+    "pandas>=2.0",
     "pyyaml>=6.0",
 ]
 

@@ -27,6 +27,7 @@ Schema: `SCHEMA.md`.
 | `setcover.gen_entropy_friendly_scp` | seeded synthetic set-cover generator | matrix_to_covers / feasibility precondition | no | vetted |
 | `setcover.polish_solution` | restricted Gurobi polish for set cover | certify_setcover_solution (CHECKED) | no | vetted |
 | `setcover.solve_mip` | Gurobi set-cover MIP solve with bound/gap | gap_certificate / certify_setcover_solution | yes | vetted |
+| `population.HardIPF` | high-dimensional IPF over long population tables | certify_population_margins | yes | vetted |
 
 ## Known-answer instances (`instances.yaml`)
 
