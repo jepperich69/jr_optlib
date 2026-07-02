@@ -300,3 +300,41 @@
   oracles: [setcover.matrix_to_covers]
   tests: tests/test_setcover_entropy.py
   certifies: false
+
+- id: setcover.polish_solution
+  name: Restricted Gurobi set-cover polish
+  kind: function
+  summary: Refines a feasible set-cover solution by freeing uncertain variables in a restricted Gurobi MIP.
+  tags: [set-cover, gurobi, polish, restricted-mip, heuristic]
+  status: vetted
+  source: Pub_MIPEntropy_MPC/code/mip_hybrid/apps/synth_setcover.py (numerics-preserving migration)
+  added: 2026-07-02
+  provenance: >
+    Migration verified against the active paper copy on a seeded synthetic
+    instance with identical warm start and fractional guide. Oracle coverage:
+    certify_setcover_solution recomputes feasibility and objective. Gurobi
+    license verified on this machine 2026-07-02.
+  module: jr_optlib.setcover.entropy
+  signature: "polish_solution(x_int, A, c, polish_time=1.0, polish_pool=0.3, x_frac=None) -> (x_polished, cost_polished, elapsed)"
+  oracles: [setcover.certify_setcover_solution]
+  tests: tests/test_setcover_entropy.py
+  certifies: false
+
+- id: setcover.solve_mip
+  name: Gurobi set-cover MIP solver
+  kind: function
+  summary: Exact/time-limited Gurobi set-cover solve with objective bound and optional incumbent tracking.
+  tags: [set-cover, gurobi, exact, mip, benchmark]
+  status: vetted
+  source: Pub_MIPEntropy_MPC/code/mip_hybrid/apps/synth_setcover.py (numerics-preserving migration)
+  added: 2026-07-02
+  provenance: >
+    Migration verified against the active paper copy on a seeded synthetic
+    instance. Returned objective, dual bound, and gap match. Optimal rows can
+    be CERTIFIED by gap_certificate; time-limited rows are CHECKED by bound
+    consistency.
+  module: jr_optlib.setcover.entropy
+  signature: "solve_mip(A, c, timelimit_s=30, gurobi_time_limit=None, gurobi_gap_limit=None, track_gurobi_anytime=False) -> dict"
+  oracles: [core.gap_certificate, setcover.certify_setcover_solution]
+  tests: tests/test_setcover_entropy.py
+  certifies: true

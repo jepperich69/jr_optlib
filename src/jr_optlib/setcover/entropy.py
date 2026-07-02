@@ -11,6 +11,7 @@ left out of this first slice.
 from __future__ import annotations
 
 import math
+import os
 import time
 from dataclasses import dataclass
 from typing import List, Optional
@@ -212,6 +213,158 @@ def round_cover_dual_guided(inst: SetCoverInstance, x_frac: np.ndarray, y: np.nd
     return x_int, cost, cov_min, feasible
 
 
+def polish_solution(x_int, A, c, polish_time: float = 1.0,
+                    polish_pool: float = 0.3, x_frac=None):
+    """Restricted Gurobi MIP polish around the current set-cover solution."""
+    t0 = time.time()
+    n, m = A.shape
+
+    if x_frac is not None:
+        proximity = 1.0 - 2.0 * np.abs(x_frac - 0.5)
+        top_k = int(m * polish_pool)
+        candidates = np.argsort(-proximity)[:top_k]
+    else:
+        import random
+        on_vars = np.where(x_int == 1)[0]
+        top_k = max(len(on_vars), int(m * polish_pool))
+        candidates = random.sample(range(m), min(top_k, m))
+
+    on_vars = set(np.where(x_int == 1)[0])
+    candidates = np.array(list(set(candidates) | on_vars))
+
+    try:
+        import gurobipy as gp
+        from gurobipy import GRB
+
+        with gp.Env(empty=True) as env:
+            env.setParam("OutputFlag", 0)
+            env.setParam("TimeLimit", polish_time)
+            env.setParam("Threads", 1)
+            env.start()
+
+            with gp.Model(env=env) as model:
+                x = model.addVars(m, vtype=GRB.BINARY, name="x")
+
+                for j in range(m):
+                    if j not in candidates:
+                        x[j].lb = x[j].ub = int(x_int[j])
+
+                for j in range(m):
+                    x[j].Start = int(x_int[j])
+
+                for i in range(n):
+                    idx = np.where(A[i, :] == 1)[0]
+                    if len(idx) > 0:
+                        model.addConstr(gp.quicksum(x[j] for j in idx) >= 1.0)
+
+                model.setObjective(gp.quicksum(c[j] * x[j] for j in range(m)), GRB.MINIMIZE)
+                model.optimize()
+
+                if model.Status in (GRB.OPTIMAL, GRB.TIME_LIMIT):
+                    x_polished = np.array([x[j].X for j in range(m)])
+                    x_polished = np.round(x_polished).astype(int)
+                    cost_polished = float(c @ x_polished)
+                    return x_polished, cost_polished, time.time() - t0
+
+                return x_int, float(c @ x_int), time.time() - t0
+
+    except Exception:
+        return x_int, float(c @ x_int), time.time() - t0
+
+
+def solve_mip(A, c, timelimit_s=30, gurobi_time_limit=None,
+              gurobi_gap_limit=None, track_gurobi_anytime=False):
+    """Solve a set-cover MIP with Gurobi, matching the paper helper API."""
+    n, m = A.shape
+    actual_time_limit = gurobi_time_limit if gurobi_time_limit is not None else timelimit_s
+
+    try:
+        import gurobipy as gp
+
+        anytime_log = [] if track_gurobi_anytime else None
+
+        def callback(model, where):
+            if where == gp.GRB.Callback.MIPSOL:
+                cur_obj = model.cbGet(gp.GRB.Callback.MIPSOL_OBJ)
+                cur_time = model.cbGet(gp.GRB.Callback.RUNTIME)
+                anytime_log.append((cur_time, cur_obj, "gurobi_incumbent"))
+
+        t0 = time.time()
+        env = gp.Env(empty=True)
+
+        for name in ("WLSAccessID", "WLSSecret", "LicenseID", "WLSToken"):
+            v = os.getenv(f"GRB_{name.upper()}")
+            if v:
+                env.setParam(name, int(v) if name == "LicenseID" else v)
+
+        for cand in ("gurobi.env", os.path.join(os.getcwd(), "gurobi.env")):
+            if os.path.isfile(cand):
+                env.readParams(cand)
+                break
+
+        if actual_time_limit is not None:
+            env.setParam("TimeLimit", float(actual_time_limit))
+
+        if gurobi_gap_limit is not None:
+            env.setParam("MIPGap", float(gurobi_gap_limit))
+        else:
+            gap_env = os.getenv("GRB_MIPGAP") or os.getenv("MIP_GAP")
+            if gap_env:
+                env.setParam("MIPGap", float(gap_env))
+
+        thr_env = os.getenv("GRB_THREADS") or os.getenv("THREADS")
+        if thr_env:
+            env.setParam("Threads", int(thr_env))
+
+        env.start()
+        model = gp.Model(env=env)
+        model.Params.OutputFlag = 0
+
+        x = model.addMVar(shape=m, vtype=gp.GRB.BINARY, name="x")
+
+        for i in range(n):
+            idx = np.where(A[i, :] == 1)[0]
+            if idx.size:
+                model.addConstr(x[idx].sum() >= 1.0)
+
+        model.setObjective((c @ x), gp.GRB.MINIMIZE)
+
+        if track_gurobi_anytime:
+            model.optimize(callback)
+        else:
+            model.optimize()
+
+        t1 = time.time()
+
+        if model.Status not in (gp.GRB.OPTIMAL, gp.GRB.TIME_LIMIT):
+            return {
+                "obj": np.nan,
+                "time": t1 - t0,
+                "bound": np.nan,
+                "gap": np.nan,
+                "anytime_log": anytime_log,
+            }
+
+        obj_val = float(model.ObjVal)
+        try:
+            bound = float(model.ObjBound)
+            denom = max(abs(obj_val), 1e-9)
+            gap_pct = 100.0 * max(0.0, (obj_val - bound) / denom)
+        except Exception:
+            bound, gap_pct = (np.nan, np.nan)
+
+        return {
+            "obj": obj_val,
+            "time": t1 - t0,
+            "bound": bound,
+            "gap": gap_pct,
+            "anytime_log": anytime_log,
+        }
+
+    except Exception:
+        return {"obj": np.nan, "time": np.nan, "bound": np.nan, "gap": np.nan, "anytime_log": None}
+
+
 def solve_entropy_setcover(
     A_matrix,
     c,
@@ -228,11 +381,9 @@ def solve_entropy_setcover(
 ):
     """RICH set-cover core: entropy relaxation then dual-guided rounding.
 
-    This first migrated slice intentionally supports only the Gurobi-free path:
-    ``polish_time=0`` and ``do_polish_mh=False``.
+    This first migrated slice supports Gurobi restricted polish, but not MH
+    polish.
     """
-    if polish_time > 0:
-        raise NotImplementedError("Gurobi restricted-polish is not migrated in this slice")
     if do_polish_mh:
         raise NotImplementedError("MH polish is not migrated in this slice")
 
@@ -252,4 +403,15 @@ def solve_entropy_setcover(
     x_int, cost, cov_min_int, feasible = round_cover_dual_guided(inst, x_frac, y)
 
     total_time = t_relax
+    if polish_time > 0 and feasible:
+        x_int, cost, t_polish = polish_solution(
+            x_int,
+            A_matrix,
+            c,
+            polish_time=polish_time,
+            polish_pool=polish_pool,
+            x_frac=x_frac,
+        )
+        total_time += t_polish
+
     return x_int, cost, feasible, total_time

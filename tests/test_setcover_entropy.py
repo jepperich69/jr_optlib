@@ -13,8 +13,10 @@ from jr_optlib.setcover import (
     build_instance_from_matrix,
     compute_reduced_costs,
     gen_entropy_friendly_scp,
+    polish_solution,
     round_cover_dual_guided,
     solve_entropy_setcover,
+    solve_mip,
 )
 
 
@@ -104,6 +106,66 @@ def test_solve_entropy_setcover_matches_old_copy_without_polish():
         assert np.array_equal(new_x, old_x)
         assert new_obj == old_obj
         assert new_feas == old_feas
+
+
+def test_polish_solution_matches_old_copy_with_gurobi():
+    old = load_old_module()
+    A, c = gen_entropy_friendly_scp(30, 100, seed=12)
+    inst = build_instance_from_matrix(A, c)
+    x_frac, y, *_ = quiet_call(
+        __import__("jr_optlib.setcover.entropy", fromlist=["ipf_rowwise_entropy"]).ipf_rowwise_entropy,
+        inst,
+        0.1,
+        25,
+        1e-3,
+    )
+    x0, *_ = round_cover_dual_guided(inst, x_frac, y)
+
+    old_x, old_obj, _ = quiet_call(old.polish_solution, x0, A, c, 1.0, 0.3, x_frac)
+    new_x, new_obj, _ = polish_solution(x0, A, c, 1.0, 0.3, x_frac)
+    assert np.array_equal(new_x, old_x)
+    assert new_obj == old_obj
+
+
+def test_solve_entropy_setcover_matches_old_copy_with_gurobi_polish():
+    old = load_old_module()
+    A, c = gen_entropy_friendly_scp(30, 100, seed=13)
+    old_x, old_obj, old_feas, _ = quiet_call(
+        old.solve_entropy_setcover,
+        A,
+        c,
+        tau=0.1,
+        iters=25,
+        tol=1e-3,
+        tau_schedule="0.5,0.2,0.1",
+        polish_time=1.0,
+        polish_pool=0.3,
+        do_polish_mh=False,
+    )
+    new_x, new_obj, new_feas, _ = solve_entropy_setcover(
+        A,
+        c,
+        tau=0.1,
+        iters=25,
+        tol=1e-3,
+        tau_schedule="0.5,0.2,0.1",
+        polish_time=1.0,
+        polish_pool=0.3,
+        do_polish_mh=False,
+    )
+    assert np.array_equal(new_x, old_x)
+    assert new_obj == old_obj
+    assert new_feas == old_feas
+
+
+def test_solve_mip_matches_old_copy_with_gurobi():
+    old = load_old_module()
+    A, c = gen_entropy_friendly_scp(20, 60, seed=16)
+    old_r = quiet_call(old.solve_mip, A, c, timelimit_s=5, gurobi_time_limit=5)
+    new_r = solve_mip(A, c, timelimit_s=5, gurobi_time_limit=5)
+    assert np.isclose(new_r["obj"], old_r["obj"])
+    assert np.isclose(new_r["bound"], old_r["bound"])
+    assert np.isclose(new_r["gap"], old_r["gap"])
 
 
 def test_setcover_oracle_checks_solution_and_catches_corruption():

@@ -25,6 +25,8 @@ Schema: `SCHEMA.md`.
 | `transport.make_contingency2d` | seeded 2D marginals (planted instance) | -- | no | vetted |
 | `setcover.solve_entropy_setcover` | RICH set-cover entropy relaxation + dual-guided rounding | certify_setcover_solution (CHECKED) | no | vetted |
 | `setcover.gen_entropy_friendly_scp` | seeded synthetic set-cover generator | matrix_to_covers / feasibility precondition | no | vetted |
+| `setcover.polish_solution` | restricted Gurobi polish for set cover | certify_setcover_solution (CHECKED) | no | vetted |
+| `setcover.solve_mip` | Gurobi set-cover MIP solve with bound/gap | gap_certificate / certify_setcover_solution | yes | vetted |
 
 ## Known-answer instances (`instances.yaml`)
 

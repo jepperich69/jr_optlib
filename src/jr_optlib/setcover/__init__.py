@@ -8,8 +8,10 @@ from jr_optlib.setcover.entropy import (
     entropy_relax_with_annealing,
     gen_entropy_friendly_scp,
     ipf_rowwise_entropy,
+    polish_solution,
     round_cover_dual_guided,
     solve_entropy_setcover,
+    solve_mip,
 )
 
 __all__ = [
@@ -19,6 +21,8 @@ __all__ = [
     "entropy_relax_with_annealing",
     "gen_entropy_friendly_scp",
     "ipf_rowwise_entropy",
+    "polish_solution",
     "round_cover_dual_guided",
     "solve_entropy_setcover",
+    "solve_mip",
 ]
