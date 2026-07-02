@@ -156,4 +156,4 @@
 - registry/functions.yaml, registry/INDEX.md -- registered the family.
 **Outcome:** Full suite 117 tests pass (110 -> 117). Gurobi license is currently WORKING (MIQP differential ran, not skipped). Oracle note: the entropic-risk MC estimator (log-MGF) converges slowly for large eta*std, so certify_entropic_risk_mc is a mild-regime convergence check (certifies=False); the real optimality certificate is the brute-force-over-permutations oracle. Latent inconsistency fixed in migration: paper's solve_hungarian_qp computed obj against the module-global mean matrix regardless of the passed C_bar; library uses the passed c_bar.
 **Next steps:** Continue the four-project scouting order -- next is the Napsti block-coordinate fixed-point primitive (solve_coord_wise / solve_continuous, oracle = verify_with_gurobi), then the Dijkstra + SUE route-choice bundle, then Pub_ML_Entropy MH review. Push jr_optlib (helpi 23) when ready.
-**Git ref:** -
+**Git ref:** 391794e
