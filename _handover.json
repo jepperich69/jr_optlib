@@ -1,0 +1,22 @@
+{
+  "project": "jr_optlib",
+  "generated": "2026-07-02 13:12",
+  "source": "_ai_log.md",
+  "latest_session": {
+    "title": "2026-07-02 (migration 3: remaining rounders)",
+    "agent": "Claude Opus 4.8",
+    "goal": "Migrate all remaining transport + population-synthesis rounders.",
+    "outcome": "91 tests pass total. All MCF paths fall back to LP in base (no ortools graph) and match the old copy on objective+feasibility; dependent rounders certified by the rounding contract and matched on contract+residual objective. Committed cbfc4eb. Transport primitive migration is now COMPLETE -- only the experiment drivers (bench_transport/bench_population) remain in the paper repo (correctly, per the inclusion rule: not reusable primitives).",
+    "next_steps": "run `/verify-model --project Pub_MIPEntropy_MPC` end-to-end now that transport oracles exist; migrate the set-cover / mip_hybrid solver family next; vendor rail582; git-push (helpi 23) when the user asks. Gurobi WLS license (LicenseID 2711408 in C:\\Users\\rich\\gurobi.lic) still reports expired on re-check -- local .lic likely needs replacing with freshly-issued credentials from the portal.",
+    "git_ref": "cbfc4eb",
+    "files_touched": [
+      "`src/jr_optlib/transport/rounding.py` (new) -- round_transport_min_cost_mcf, round_transport_min_cost_approx, round_transport_floor_residue_lp (alias), + _mask_from_topk_and_mass, _reopt_from_greedy.",
+      "`src/jr_optlib/transport/population_round.py` (new) -- dependent_round_2d dispatcher + _lp / _lp_sparsified / _mcf (were the private `_dependent_round_2d_*`); completes the ipf_2d -> integer-table pipeline.",
+      "`src/jr_optlib/oracles/transport.py` -- `certify_dependent_round` (exact marginals + integrality + per-cell deviation < 1).",
+      "exports; `tests/test_rounding.py` (9) + `tests/test_population_round.py` (18); `registry/functions.yaml`+`INDEX.md` (7 new entries)."
+    ]
+  },
+  "latest_session_complete": true,
+  "latest_session_missing": null,
+  "session_count": 4
+}
