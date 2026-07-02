@@ -53,6 +53,23 @@
 
 ---
 
+## Session 2026-07-02 (Codex: set-cover + PopInt integration)
+**Agent:** Codex GPT-5
+**Goal:** Continue the common-codebase harnessing work: verify the repaired Gurobi setup, migrate MIPEntropy set-cover primitives, then start Pub_PopInt_PartB integration.
+**Files touched:**
+- `src/jr_optlib/setcover/` -- migrated entropy-friendly SCP generator, entropy relaxation, dual-guided rounding, restricted Gurobi polish, and Gurobi MIP solve from the MIPEntropy paper copy.
+- `src/jr_optlib/oracles/setcover.py` -- added feasibility/objective recomputation helpers for set-cover solutions.
+- `src/jr_optlib/population/hard_ipf.py` -- migrated PopInt `HardIPF` as the N-dimensional IPF primitive.
+- `src/jr_optlib/population/integerize.py` -- migrated PopInt `swap_repair_zone` anchor-preserving integer repair.
+- `src/jr_optlib/oracles/population.py` -- added margin certification for weighted or integer population tables.
+- `tests/test_setcover_entropy.py`, `tests/test_population_hard_ipf.py` -- old-vs-new differential tests against the live paper copies plus oracle corruption tests.
+- `registry/functions.yaml`, `registry/INDEX.md`, `pyproject.toml`, exports -- registered the new primitives and dependencies.
+**Outcome:** Gurobi license and command-line/Python solves are working. Set-cover core, Gurobi polish, Gurobi MIP, PopInt `HardIPF`, and PopInt `swap_repair_zone` are now integrated into `jr_optlib` with differential tests and registry coverage. Full suite passes: 102 tests. Commits: `ce8ac65`, `edd3a3f`, `99bb48c`, `de56887` (plus earlier Codex housekeeping `b470257`, `8deef63`).
+**Next steps:** Migrate PopInt anchor PPS (`step2_anchor_pps`) and any remaining integerization helpers; then run `/verify-model` on Pub_PopInt_PartB and push `jr_optlib` when desired.
+**Git ref:** de56887
+
+---
+
 ## Session 2026-07-02 (handoff prep for Codex)
 **Agent:** Claude Opus 4.8
 **Goal:** User is low on tokens and wants to continue the jr_optlib migration ("restructuring") in Codex or Gemini. Assess whether that is trustworthy and make sure the next agent boots with full context.
