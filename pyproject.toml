@@ -20,6 +20,10 @@ dependencies = [
 oracles = [
     "scipy>=1.10",
 ]
+# LP-family transport functions need an LP backend at runtime (lazy import).
+transport-lp = [
+    "pulp>=2.7",   # or install OR-Tools; ortools is preferred if present
+]
 oracles-full = [
     "scipy>=1.10",
     "pot>=0.9",        # optimal-transport reference impls (Sinkhorn, EMD)
@@ -28,6 +32,8 @@ oracles-full = [
 test = [
     "pytest>=7.0",
     "scipy>=1.10",
+    "pulp>=2.7",
+    "pyyaml>=6.0",
 ]
 
 [tool.setuptools.packages.find]

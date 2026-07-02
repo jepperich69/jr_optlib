@@ -70,6 +70,74 @@
   tests: tests/test_sinkhorn.py
   certifies: false
 
+- id: transport.solve_transport_opt
+  name: Exact min-cost transport
+  kind: function
+  summary: Exact min-cost transportation LP (integral by TU); returns (X, obj, time).
+  tags: [transport, min-cost-flow, exact, lp]
+  status: vetted
+  source: Pub_MIPEntropy_MPC/code/mip_hybrid/apps/population_transport.py (numerics-preserving migration)
+  added: 2026-07-02
+  provenance: >
+    Migration verified vs old copy on objective+feasibility (LP is degenerate so
+    the plan is not unique; cost is). Certified optimal by certify_transport
+    against an independent scipy.linprog reference. Backend: ortools GLOP if
+    available, else pulp/CBC.
+  module: jr_optlib.transport.lp_transport
+  signature: "solve_transport_opt(a, b, C) -> (X, obj, elapsed)"
+  oracles: [transport.certify_transport, transport.transport_optimal_cost]
+  tests: tests/test_lp_transport.py
+  certifies: true
+
+- id: transport.round_transport_min_cost_lp
+  name: Integer transport via LP
+  kind: function
+  summary: Integerization by solving the min-cost transport LP (integral by TU); returns (Xint, time).
+  tags: [transport, integerization, rounding, lp, exact]
+  status: vetted
+  source: Pub_MIPEntropy_MPC/code/mip_hybrid/apps/population_transport.py (numerics-preserving migration)
+  added: 2026-07-02
+  provenance: Verified vs old copy (objective+feasibility); certified optimal vs scipy reference.
+  module: jr_optlib.transport.lp_transport
+  signature: "round_transport_min_cost_lp(a, b, C) -> (Xint, elapsed)"
+  oracles: [transport.certify_transport]
+  tests: tests/test_lp_transport.py
+  certifies: true
+
+- id: transport.round_transport_min_cost_lp_restricted
+  name: Integer transport LP on restricted support
+  kind: function
+  summary: Min-cost transport LP over a boolean arc mask E; returns (Xint, time, ok) with full-LP fallback signal.
+  tags: [transport, integerization, rounding, lp, restricted]
+  status: vetted
+  source: Pub_MIPEntropy_MPC/code/mip_hybrid/apps/population_transport.py (numerics-preserving migration)
+  added: 2026-07-02
+  provenance: Helper for the greedy-push repair; feasibility self-checked (returns ok=False if marginals unmet).
+  module: jr_optlib.transport.lp_transport
+  signature: "round_transport_min_cost_lp_restricted(a, b, C, E) -> (Xint, elapsed, ok)"
+  oracles: [transport.certify_transport]
+  tests: tests/test_lp_transport.py
+  certifies: false
+
+- id: transport.round_transport_greedy_push
+  name: Reduced-cost greedy transport rounding
+  kind: function
+  summary: Greedy integer push by Sinkhorn reduced cost, with restricted-LP repair and full-LP fallback.
+  tags: [transport, integerization, rounding, heuristic, greedy]
+  status: vetted
+  source: Pub_MIPEntropy_MPC/code/mip_hybrid/apps/population_transport.py:882 (ACTIVE def; :789 dead-shadowed copy dropped)
+  added: 2026-07-02
+  provenance: >
+    Resolves the double-definition bug (two same-named functions in the paper
+    file; only :882 was live). Verified vs the live/old copy on
+    objective+feasibility+ok. Heuristic: certify_transport(require_optimal=False)
+    yields CHECKED (feasible + cost >= optimum), not certified.
+  module: jr_optlib.transport.lp_transport
+  signature: "round_transport_greedy_push(a, b, C, u, v, tau, topk=None) -> (Xint, elapsed, ok)"
+  oracles: [transport.certify_transport]
+  tests: tests/test_lp_transport.py
+  certifies: false
+
 - id: transport.make_contingency2d
   name: Synthetic 2D marginals
   kind: function

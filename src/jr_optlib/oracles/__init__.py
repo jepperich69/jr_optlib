@@ -27,6 +27,8 @@ from jr_optlib.oracles.transport import (
     ipf_reference,
     certify_ipf,
     certify_sinkhorn,
+    certify_transport,
+    transport_optimal_cost,
 )
 from jr_optlib.oracles.setcover import (
     setcover_feasible,
@@ -45,6 +47,8 @@ __all__ = [
     "ipf_reference",
     "certify_ipf",
     "certify_sinkhorn",
+    "certify_transport",
+    "transport_optimal_cost",
     "setcover_feasible",
     "setcover_cost",
 ]

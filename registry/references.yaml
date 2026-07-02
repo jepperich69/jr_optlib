@@ -15,6 +15,19 @@
   validates: [transport.ipf_2d]
   import: "from jr_optlib.oracles.transport import ipf_reference"
 
+- id: ref.scipy_linprog_transport
+  name: scipy.linprog min-cost transport
+  kind: reference
+  summary: Exact min-cost transport objective via scipy HiGHS -- independent of the ortools/pulp LP.
+  tags: [transport, min-cost-flow, exact, lp, differential]
+  status: vetted
+  source: jr_optlib.oracles.transport.transport_optimal_cost (scipy.optimize.linprog, method=highs)
+  added: 2026-07-02
+  provenance: Different solver/code path from the paper's ortools/pulp LP; used to certify solve_transport_opt and round_transport_min_cost_lp and to bound the greedy heuristic.
+  backend: scipy
+  validates: [transport.solve_transport_opt, transport.round_transport_min_cost_lp, transport.round_transport_greedy_push]
+  import: "from jr_optlib.oracles.transport import transport_optimal_cost"
+
 - id: ref.scipy_linear_sum_assignment
   name: scipy Hungarian assignment
   kind: reference

@@ -22,7 +22,7 @@ from typing import Optional, Tuple
 
 import numpy as np
 
-from jr_optlib.oracles.core import OracleResult, differential
+from jr_optlib.oracles.core import OracleResult, differential, metamorphic
 
 
 def marginal_residual(X: np.ndarray, row_marg: np.ndarray, col_marg: np.ndarray,
@@ -143,6 +143,64 @@ def ipf_reference(X: np.ndarray, row_marg: np.ndarray, col_marg: np.ndarray,
         certifies=False,
         detail=f"max rel elementwise diff vs log-space reference={res:.3e}",
     )
+
+
+def transport_optimal_cost(a: np.ndarray, b: np.ndarray, C: np.ndarray) -> float:
+    """Independent exact min-cost transport objective via scipy.optimize.linprog.
+
+    A reference solver in a different code path (scipy HiGHS) from the paper's
+    ortools/pulp LP, so agreement is a genuine differential, not a re-run. Used
+    to certify the paper's exact solvers and to bound its heuristics.
+    """
+    from scipy.optimize import linprog
+
+    a = np.asarray(a, float); b = np.asarray(b, float)
+    C = np.asarray(C, float)
+    m, n = C.shape
+    # variables x_ij flattened row-major; min <C, x>, x >= 0
+    c = C.reshape(-1)
+    # row-sum and col-sum equality constraints
+    A_eq = np.zeros((m + n, m * n))
+    for i in range(m):
+        A_eq[i, i * n:(i + 1) * n] = 1.0
+    for j in range(n):
+        A_eq[m + j, j::n] = 1.0
+    b_eq = np.concatenate([a, b])
+    res = linprog(c, A_eq=A_eq, b_eq=b_eq, bounds=(0, None), method="highs")
+    if not res.success:
+        raise RuntimeError(f"scipy transport reference failed: {res.message}")
+    return float(res.fun)
+
+
+def certify_transport(X: np.ndarray, a: np.ndarray, b: np.ndarray, C: np.ndarray,
+                      require_optimal: bool = True,
+                      tol: float = 1e-6) -> Tuple[list, bool]:
+    """Verify a transport plan X against an independent scipy reference.
+
+    Always checks feasibility (marginals) and cost-consistency (obj >= optimum,
+    which any feasible plan must satisfy). With ``require_optimal=True`` (exact
+    solvers) it also checks obj == optimum, which then *certifies* optimality.
+    For heuristics pass ``require_optimal=False``: feasible + consistent yields
+    CHECKED, not FAIL, since a heuristic is not claimed optimal.
+    """
+    X = np.asarray(X, float)
+    opt = transport_optimal_cost(a, b, C)
+    obj = float((np.asarray(C, float) * X).sum())
+
+    r_feas = marginal_residual(X, a, b, tol=tol)
+    # a feasible plan can never cost less than the optimum: opt <= obj
+    r_cons = metamorphic(before=obj, after=opt, relation="<=",
+                         rel_tol=max(tol, 1e-9), name="cost_ge_optimum")
+    results = [r_feas, r_cons]
+    certified = False
+    if require_optimal:
+        r_opt = differential(obj, opt, label_a="obj", label_b="scipy_opt",
+                             rel_tol=max(tol, 1e-9), name="optimal_cost")
+        if r_opt.passed:
+            r_opt.certifies = True
+        results.append(r_opt)
+        certified = r_feas.passed and r_opt.passed
+    return results, certified
 
 
 def certify_sinkhorn(X: np.ndarray, a: np.ndarray, b: np.ndarray, C: np.ndarray,

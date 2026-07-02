@@ -10,6 +10,10 @@ Schema: `SCHEMA.md`.
 | `transport.ipf_2d` | IPF / raking (2D) -- KL projection onto marginals | marginal_residual, ipf_scaling_form, ipf_reference | yes | vetted |
 | `transport.sinkhorn_balanced` | entropic OT (Sinkhorn) coupling | certify_sinkhorn (marginals + scaling form vs K) | yes | vetted |
 | `transport.sinkhorn_balanced_uv` | Sinkhorn returning (u, v) scalings | certify_sinkhorn | yes | vetted |
+| `transport.solve_transport_opt` | exact min-cost transport (LP) | certify_transport (vs scipy.linprog) | yes | vetted |
+| `transport.round_transport_min_cost_lp` | integer transport via LP | certify_transport | yes | vetted |
+| `transport.round_transport_min_cost_lp_restricted` | integer transport LP on arc mask | certify_transport | no | vetted |
+| `transport.round_transport_greedy_push` | reduced-cost greedy rounding (bug-fixed) | certify_transport (CHECKED) | no | vetted |
 | `transport.make_transport` | seeded balanced transport instance | -- | no | vetted |
 | `transport.make_contingency2d` | seeded 2D marginals (planted instance) | -- | no | vetted |
 
