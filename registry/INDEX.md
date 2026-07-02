@@ -29,6 +29,8 @@ Schema: `SCHEMA.md`.
 | `setcover.solve_mip` | Gurobi set-cover MIP solve with bound/gap | gap_certificate / certify_setcover_solution | yes | vetted |
 | `population.HardIPF` | high-dimensional IPF over long population tables | certify_population_margins | yes | vetted |
 | `population.swap_repair_zone` | anchor-preserving population integer swap repair | certify_population_margins (CHECKED) | no | vetted |
+| `population.step1_split` | deterministic floor split for population integerization | certify_population_margins (pipeline precondition) | no | vetted |
+| `population.step2_anchor_pps` | anchor-conditioned PPS integer additions | certify_population_margins (CHECKED) | no | vetted |
 
 ## Known-answer instances (`instances.yaml`)
 

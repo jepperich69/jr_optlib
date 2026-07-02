@@ -6,6 +6,7 @@ from __future__ import annotations
 from typing import Sequence
 
 import numpy as np
+import pandas as pd
 
 
 DEFAULT_KEY_COLS = ("AgeID", "NumChildID", "FamID", "GenderID", "IncomeID", "LmaID")
@@ -13,6 +14,84 @@ DEFAULT_ANCHOR_NAME = "Age\u00d7Gender"
 SWAP_MAX_PASSES = 3
 SWAP_MAX_MOVES_PER_SLICE = 2000
 GHOST_X_EPS = 1e-6
+
+
+def step1_split(frac_df_zone, zone_target: int):
+    """Deterministically split fractional counts into floors and additions needed."""
+    df = frac_df_zone.copy()
+    df["n"] = np.floor(df["x"] + 1e-9).astype(int)
+    df["frac"] = df["x"] - df["n"]
+    floor_sum = int(df["n"].sum())
+    k_add = int(zone_target - floor_sum)
+    if k_add < 0:
+        take = -k_add
+        idx = df["frac"].nsmallest(take).index
+        df.loc[idx, "n"] = (df.loc[idx, "n"] - 1).astype(int)
+        k_add = 0
+    return df, k_add
+
+
+def pps_without_replacement(idx_array: np.ndarray, weights: np.ndarray, k: int, rng: np.random.Generator):
+    """Probability-proportional-to-size sample without replacement."""
+    w = weights.clip(min=1e-12)
+    p = w / w.sum()
+    k = int(min(k, len(idx_array)))
+    if k <= 0:
+        return np.array([], dtype=idx_array.dtype)
+    return rng.choice(idx_array, size=k, replace=False, p=p)
+
+
+def step2_anchor_pps(
+    df_split,
+    constraints,
+    anchor_dims,
+    k_add: int,
+    seed: int = 42,
+    anchor_name: str = DEFAULT_ANCHOR_NAME,
+):
+    """Apply anchor-conditioned PPS additions after deterministic floor split.
+
+    Numerics-preserving extraction of ``step2_anchor_pps`` from
+    ``Pub_PopInt_PartB/Large Scale/Intege_Paper_Minimal_SWAP_ARC.py``.
+    ``anchor_dims`` and ``k_add`` are retained for signature compatibility with
+    the paper copy; the original implementation uses the AgeID/GenderID anchor.
+    """
+    rng = np.random.default_rng(seed)
+    df = df_split.copy()
+    df["z"] = 0
+
+    anchor = next(cz for cz in constraints if cz.name == anchor_name)
+    dims = ["AgeID", "GenderID"]
+    tgt = anchor.df.groupby(dims, observed=True, sort=False)[anchor.val_col].sum().rename("tgt")
+    flr = df.groupby(dims, observed=True, sort=False)["n"].sum().rename("floor")
+    need = (tgt - flr).reindex(tgt.index, fill_value=0).clip(lower=0).astype(int)
+
+    chosen_records = []
+
+    for key, need_units in need.items():
+        if int(need_units) <= 0:
+            continue
+
+        mask = np.ones(len(df), dtype=bool)
+        for d, v in zip(dims, key if isinstance(key, tuple) else (key,)):
+            mask &= df[d].to_numpy() == v
+        idx = df.index[mask].to_numpy()
+        if len(idx) == 0:
+            continue
+        weights = df.loc[idx, "frac"].to_numpy()
+        if not np.any(weights > 0):
+            weights = np.ones_like(weights) * 1e-12
+        chosen = pps_without_replacement(idx, weights, int(need_units), rng)
+        df.loc[chosen, "z"] = 1
+        for j in chosen:
+            rec = {"row_idx": int(j)}
+            for d, v in zip(dims, key if isinstance(key, tuple) else (key,)):
+                rec[d] = int(v)
+            rec["frac"] = float(df.at[j, "frac"])
+            chosen_records.append(rec)
+
+    df["n"] = (df["n"] + df["z"]).astype(int)
+    return df, pd.DataFrame(chosen_records)
 
 
 def compute_zone_residuals(int_df_zone, constraints, anchor_name: str = DEFAULT_ANCHOR_NAME):

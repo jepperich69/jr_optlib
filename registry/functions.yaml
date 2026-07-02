@@ -378,3 +378,40 @@
   oracles: [population.certify_population_margins]
   tests: tests/test_population_hard_ipf.py
   certifies: false
+
+- id: population.step1_split
+  name: Deterministic population floor split
+  kind: function
+  summary: Splits one zone's fractional population weights into integer floors, fractional residues, and remaining additions.
+  tags: [population-synthesis, integerization, floor-split, pandas, popint]
+  status: vetted
+  source: Pub_PopInt_PartB/Large Scale/Intege_Paper_Minimal_SWAP_ARC.py (numerics-preserving migration)
+  added: 2026-07-02
+  provenance: >
+    Migration verified against the active PopInt large-scale script on a
+    synthetic zone. This is a deterministic precondition step for anchor PPS
+    and swap repair.
+  module: jr_optlib.population.integerize
+  signature: "step1_split(frac_df_zone, zone_target) -> (df_split, k_add)"
+  oracles: [population.certify_population_margins]
+  tests: tests/test_population_hard_ipf.py
+  certifies: false
+
+- id: population.step2_anchor_pps
+  name: Anchor-conditioned PPS integer additions
+  kind: function
+  summary: Samples residual integer additions within Age x Gender anchor slices using fractional residues as PPS weights.
+  tags: [population-synthesis, integerization, pps, anchor-preserving, pandas, popint]
+  status: vetted
+  source: Pub_PopInt_PartB/Large Scale/Intege_Paper_Minimal_SWAP_ARC.py (numerics-preserving migration)
+  added: 2026-07-02
+  provenance: >
+    Migration verified against the active PopInt large-scale script with a
+    fixed RNG seed, including identical selected-row records. Certified on the
+    test instance by certify_population_margins over the integer n column for
+    the anchor constraint; in general this stochastic primitive is CHECKED.
+  module: jr_optlib.population.integerize
+  signature: "step2_anchor_pps(df_split, constraints, anchor_dims, k_add, seed=42, anchor_name='Age x Gender') -> (df, chosen_df)"
+  oracles: [population.certify_population_margins]
+  tests: tests/test_population_hard_ipf.py
+  certifies: false

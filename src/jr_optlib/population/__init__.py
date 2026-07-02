@@ -7,7 +7,10 @@ from jr_optlib.population.integerize import (
     SWAP_MAX_MOVES_PER_SLICE,
     SWAP_MAX_PASSES,
     compute_zone_residuals,
+    pps_without_replacement,
     swap_repair_zone,
+    step1_split,
+    step2_anchor_pps,
 )
 
 __all__ = [
@@ -17,5 +20,8 @@ __all__ = [
     "SWAP_MAX_MOVES_PER_SLICE",
     "SWAP_MAX_PASSES",
     "compute_zone_residuals",
+    "pps_without_replacement",
     "swap_repair_zone",
+    "step1_split",
+    "step2_anchor_pps",
 ]
