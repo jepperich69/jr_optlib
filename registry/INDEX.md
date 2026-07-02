@@ -23,6 +23,8 @@ Schema: `SCHEMA.md`.
 | `transport.dependent_round_2d_mcf` | dependent rounding (min-cost flow) | certify_dependent_round | yes | vetted |
 | `transport.make_transport` | seeded balanced transport instance | -- | no | vetted |
 | `transport.make_contingency2d` | seeded 2D marginals (planted instance) | -- | no | vetted |
+| `setcover.solve_entropy_setcover` | RICH set-cover entropy relaxation + dual-guided rounding | certify_setcover_solution (CHECKED) | no | vetted |
+| `setcover.gen_entropy_friendly_scp` | seeded synthetic set-cover generator | matrix_to_covers / feasibility precondition | no | vetted |
 
 ## Known-answer instances (`instances.yaml`)
 

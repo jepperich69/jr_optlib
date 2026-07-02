@@ -32,6 +32,8 @@ from jr_optlib.oracles.transport import (
     transport_optimal_cost,
 )
 from jr_optlib.oracles.setcover import (
+    certify_setcover_solution,
+    matrix_to_covers,
     setcover_feasible,
     setcover_cost,
 )
@@ -53,4 +55,6 @@ __all__ = [
     "transport_optimal_cost",
     "setcover_feasible",
     "setcover_cost",
+    "matrix_to_covers",
+    "certify_setcover_solution",
 ]

@@ -13,6 +13,8 @@ __version__ = "0.1.0"
 
 from jr_optlib.transport.ipf import ipf_2d, make_contingency2d
 from jr_optlib.transport.sinkhorn import sinkhorn_balanced, make_transport
+from jr_optlib.setcover.entropy import solve_entropy_setcover
 
 __all__ = ["ipf_2d", "make_contingency2d",
-           "sinkhorn_balanced", "make_transport", "__version__"]
+           "sinkhorn_balanced", "make_transport",
+           "solve_entropy_setcover", "__version__"]

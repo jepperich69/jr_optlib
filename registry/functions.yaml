@@ -263,3 +263,40 @@
   oracles: []
   tests: tests/test_ipf.py
   certifies: false
+
+- id: setcover.solve_entropy_setcover
+  name: Entropy-guided set-cover heuristic
+  kind: function
+  summary: RICH set-cover core: row-wise entropy relaxation followed by dual-guided rounding and drop-fix pruning.
+  tags: [set-cover, entropy, heuristic, rich, rounding]
+  status: vetted
+  source: Pub_MIPEntropy_MPC/code/mip_hybrid/apps/synth_setcover.py (Gurobi-free core; numerics-preserving migration)
+  added: 2026-07-02
+  provenance: >
+    Migration verified against the active paper copy on seeded synthetic
+    instances with polish disabled (polish_time=0, do_polish_mh=False).
+    This first slice deliberately excludes Gurobi restricted-polish and MH
+    polish. Oracle coverage: certify_setcover_solution recomputes feasibility
+    and objective from the selected columns; CHECKED, not optimality-certified.
+  module: jr_optlib.setcover.entropy
+  signature: "solve_entropy_setcover(A_matrix, c, tau=0.1, iters=50, tol=1e-3, tau_schedule=None, polish_time=0.0, ...) -> (x_int, cost, feasible, elapsed)"
+  oracles: [setcover.certify_setcover_solution, setcover.setcover_feasible, setcover.setcover_cost]
+  tests: tests/test_setcover_entropy.py
+  certifies: false
+
+- id: setcover.gen_entropy_friendly_scp
+  name: Synthetic entropy-friendly set-cover generator
+  kind: function
+  summary: Deterministic seeded generator for the MIPEntropy synthetic set-cover instances.
+  tags: [set-cover, instance-generator, seeded, synthetic]
+  status: vetted
+  source: Pub_MIPEntropy_MPC/code/mip_hybrid/apps/synth_setcover.py
+  added: 2026-07-02
+  provenance: >
+    Migration verified bit-for-bit against the paper copy for seeded cases.
+    Guarantees every row has at least one covering column.
+  module: jr_optlib.setcover.entropy
+  signature: "gen_entropy_friendly_scp(n, m, seed=42) -> (A, c)"
+  oracles: [setcover.matrix_to_covers]
+  tests: tests/test_setcover_entropy.py
+  certifies: false
