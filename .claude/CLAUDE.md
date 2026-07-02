@@ -19,7 +19,8 @@ metamorphic, known-answer benchmarks). The `harness` turns oracle results into a
 ## Key files
 
 - `src/jr_optlib/transport/ipf.py` -- first vetted function (`ipf_2d`), extracted numerics-preserving from Pub_MIPEntropy_MPC.
-- `src/jr_optlib/oracles/` -- `core` (generic oracles), `transport` (IPF certificate), `setcover`.
+- `src/jr_optlib/oracles/` -- `core` (generic oracles), `transport` (IPF certificate), `setcover`, `population` (margin + secondary-floor), `entropic_qp` (formula-vs-MC + brute-force-optimum).
+- `src/jr_optlib/optimization/` -- `lagrangian` (subgradient dual ascent), `entropic_qp` (QP/Hungarian/MIQP entropic-risk assignment; uses scipy.optimize and, for MIQP, gurobipy).
 - `src/jr_optlib/harness.py` -- coverage-map builder (the deliverable).
 - `registry/` -- the index: `functions.yaml`, `instances.yaml`, `references.yaml`, `SCHEMA.md`, `INDEX.md`.
 - `oracle_bank/` -- benchmark instances + reference impls + provenance; `demo_scp41.py` proves the harness end-to-end.

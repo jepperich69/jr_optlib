@@ -562,3 +562,68 @@
   oracles: [entropic_qp.certify_entropic_assignment, entropic_qp.certify_entropic_risk_mc]
   tests: tests/test_optimization_entropic_qp.py
   certifies: true
+- id: optimization.solve_coord_wise
+  name: Block-coordinate descent NLP solver
+  kind: function
+  summary: Generic bilinear optimization for transit spacing and frequency.
+  tags: [optimization, nlp, coordinate-descent, bilinear, transit]
+  status: vetted
+  source: Pub_NapstiGranularity_TBA/code/copenhagen/nlp_cph_v3.py
+  added: 2026-07-02
+  provenance: >
+    Migrated from NapstiGranularity. Vetted via the verify_with_gurobi oracle
+    which certifies global optimality via a tight LP/MIP bound for bilinear objectives.
+  module: jr_optlib.optimization.nlp
+  signature: "solve_coord_wise(D, L, k_v, L_k, c_k_v, B, ...) -> (G_kz, f_k, mu_new, history)"
+  oracles: [nlp.verify_with_gurobi]
+
+- id: optimization.dijkstra_manhattan
+  name: Manhattan Dijkstra distance
+  kind: function
+  summary: Simplified grid distance calculation.
+  tags: [optimization, routing, dijkstra, grid, distance]
+  status: vetted
+  source: Pub_NapstiGranularity_TBA/newSim/newSim.py
+  added: 2026-07-02
+  provenance: >
+    Migrated from NapstiGranularity newSim. Computes O(P*S) distances exactly.
+  module: jr_optlib.optimization.routing
+  signature: "dijkstra_manhattan(station_positions, person_positions, people_modes) -> dict"
+  oracles: []
+
+- id: optimization.compute_route_choice_shares
+  name: SUE Route Choice
+  kind: function
+  summary: Stochastic User Equilibrium route choice over car + transit.
+  tags: [optimization, routing, sue, route-choice, transit]
+  status: vetted
+  source: Pub_CongestionPMIP_TBA/RICH_bilevel_multinetwork_publication_SUE.py
+  added: 2026-07-02
+  provenance: >
+    Extracted from CongestionPMIP.
+  module: jr_optlib.optimization.routing
+  signature: "compute_route_choice_shares(...) -> (P_car, P_transit, S_route)"
+  oracles: []
+- id: optimization.backward_induction_solver
+  module: jr_optlib.optimization.dp
+  type: DP
+
+- id: optimization.contract_transitions
+  module: jr_optlib.optimization.dp
+  type: DP
+
+- id: optimization.compute_mnl_probabilities
+  module: jr_optlib.optimization.choice
+  type: Choice
+
+- id: optimization.compute_logsum
+  module: jr_optlib.optimization.choice
+  type: Choice
+
+- id: optimization.compute_nested_logit_probabilities
+  module: jr_optlib.optimization.choice
+  type: Choice
+
+- id: sampling.run_q_learning_episode
+  module: jr_optlib.sampling.rl
+  type: RL

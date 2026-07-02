@@ -47,6 +47,7 @@ from jr_optlib.oracles.entropic_qp import (
     certify_entropic_assignment,
     certify_entropic_risk_mc,
 )
+from jr_optlib.oracles.nlp import verify_with_gurobi
 
 __all__ = [
     "OracleResult",
@@ -73,4 +74,5 @@ __all__ = [
     "certify_vsp_heuristic_chain",
     "certify_entropic_assignment",
     "certify_entropic_risk_mc",
+    "verify_with_gurobi",
 ]

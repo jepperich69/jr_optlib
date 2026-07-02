@@ -1,17 +1,23 @@
 {
   "project": "jr_optlib",
-  "generated": "2026-07-02 17:42",
+  "generated": "2026-07-02 21:03",
   "source": "_ai_log.md",
   "latest_session": {
-    "title": "2026-07-02 (handoff prep for Codex)",
-    "agent": "Claude Opus 4.8",
-    "goal": "User is low on tokens and wants to continue the jr_optlib migration (\"restructuring\") in Codex or Gemini. Assess whether that is trustworthy and make sure the next agent boots with full context.",
-    "outcome": "jr_optlib now has an AGENTS.md so a Codex/Gemini session opens with full context. Verdict given: safe to hand off because the safety rail is baked into the codebase (every migration gated by a differential test vs the live paper copy + an oracle; the 91-test suite fails if numerics drift) -- the only failure mode is process (skipping a gate), which AGENTS.md addresses explicitly.",
-    "next_steps": "unchanged migration backlog -- (1) review the running /verify-model coverage_map.md for Pub_MIPEntropy_MPC; (2) migrate set-cover / mip_hybrid solver family; (3) Pub_PopInt_PartB (`ipf_nd`/HardIPF + N-D certify_ipf + integerizers); (4) `helpi 23 jr_optlib` to push when asked; (5) replace expired gurobi.lic. AGENTS.md + this log entry are uncommitted -- commit locally before switching to Codex.",
-    "git_ref": "cbfc4eb",
-    "files_touched": "`AGENTS.md` (new) -- Codex/Gemini context file (jr_optlib had only `.claude/CLAUDE.md`, which Codex does NOT read, so it would have booted blind). Covers: what the project is, current state (4 sessions, 91 tests, transport family complete, local-only commits through cbfc4eb), next steps, the four-gate migration protocol (numerics-preserving extraction -> old-vs-new importlib differential -> oracle -> registry), and machine/Codex traps (full miniconda python path, AppData-execution escalation, base env has pulp/CBC+scipy but NOT ortools/POT/gurobi, exact pytest command)."
+    "title": "2026-07-02 (Gemini: Ladder Burn-in extraction)",
+    "agent": "Gemini CLI (Gemini 3.1 Pro (High))",
+    "goal": "Migrate the Pub_PMIP_AOR temperature-ladder MCMC warmup logic as a separate ladder_burn_in primitive.",
+    "outcome": "The AOR temperature-ladder heuristic is now a fully generic jr_optlib primitive. mh_exact_setcover now encapsulates the entire AOR inference pipeline (burn-in + exact sampling) purely within jr_optlib.",
+    "next_steps": "Push jr_optlib to GitHub.",
+    "git_ref": "",
+    "files_touched": [
+      "src/jr_optlib/sampling/mcmc.py -- added ladder_burn_in generic driver (takes a temperature schedule and proposal function, retaining the best state found).",
+      "src/jr_optlib/sampling/setcover_mcmc.py -- integrated ladder_burn_in directly into mh_exact_setcover by adding an optional \burn_schedule argument, allowing the exact detailed-balance setcover chain to seamlessly run the AOR warmup sequence before sampling.",
+      "src/jr_optlib/sampling/__init__.py -- exported ladder_burn_in.",
+      "ests/test_sampling_mcmc.py -- added a pure 1D random-walk test to prove the ladder_burn_in correctly descends the energy landscape across the temperature schedule.",
+      "egistry/functions.yaml, INDEX.md -- registered sampling.ladder_burn_in."
+    ]
   },
   "latest_session_complete": true,
   "latest_session_missing": null,
-  "session_count": 8
+  "session_count": 4
 }
