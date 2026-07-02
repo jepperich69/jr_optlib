@@ -10,10 +10,16 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 
-from jr_optlib.oracles import Verdict, certify_population_margins, summarize
+from jr_optlib.oracles import (
+    Verdict,
+    certify_population_margins,
+    certify_secondary_margins_vs_floor,
+    summarize,
+)
 from jr_optlib.population import (
     ConstraintSpec,
     HardIPF,
+    optimize_repair_zone,
     step1_split,
     step2_anchor_pps,
     swap_repair_zone,
@@ -294,6 +300,66 @@ def test_step1_split_and_step2_anchor_pps_match_old_copy():
     results, certified = certify_population_margins(new_out, constraints, weight_col="n", tol=0.0)
     assert certified
     assert summarize(results) is Verdict.CERTIFIED
+
+
+def toy_infeasible_repair_zone(anchor_name="AgeGender"):
+    """One zone whose secondary margin cannot be hit exactly under the anchor.
+
+    Two people are pinned by the anchor (Gender 1 and Gender 2, one each), so the
+    income margin can carry a mass of only 2; the AgeIncome target sums to 4.
+    Any integer table therefore has secondary L1 >= 2 -- the floor is exactly 2.
+    """
+    rows = [
+        {"ZoneID": 10, "AgeID": 1, "NumChildID": 1, "FamID": 1, "GenderID": 1, "IncomeID": 1, "LmaID": 1, "n": 1},
+        {"ZoneID": 10, "AgeID": 1, "NumChildID": 1, "FamID": 1, "GenderID": 1, "IncomeID": 2, "LmaID": 1, "n": 0},
+        {"ZoneID": 10, "AgeID": 1, "NumChildID": 1, "FamID": 1, "GenderID": 2, "IncomeID": 1, "LmaID": 1, "n": 0},
+        {"ZoneID": 10, "AgeID": 1, "NumChildID": 1, "FamID": 1, "GenderID": 2, "IncomeID": 2, "LmaID": 1, "n": 1},
+    ]
+    int_df = pd.DataFrame(rows)
+    zone_constraints = [
+        ConstraintSpec(anchor_name, ("AgeID", "GenderID"),
+                       pd.DataFrame([{"AgeID": 1, "GenderID": 1, "Val": 1},
+                                     {"AgeID": 1, "GenderID": 2, "Val": 1}])),
+        ConstraintSpec("AgeIncome", ("AgeID", "IncomeID"),
+                       pd.DataFrame([{"AgeID": 1, "IncomeID": 1, "Val": 2},
+                                     {"AgeID": 1, "IncomeID": 2, "Val": 2}])),
+    ]
+    full_constraints = [
+        ConstraintSpec(anchor_name, ("ZoneID", "AgeID", "GenderID"),
+                       pd.DataFrame([{"ZoneID": 10, "AgeID": 1, "GenderID": 1, "Val": 1},
+                                     {"ZoneID": 10, "AgeID": 1, "GenderID": 2, "Val": 1}])),
+        ConstraintSpec("AgeIncome", ("ZoneID", "AgeID", "IncomeID"),
+                       pd.DataFrame([{"ZoneID": 10, "AgeID": 1, "IncomeID": 1, "Val": 2},
+                                     {"ZoneID": 10, "AgeID": 1, "IncomeID": 2, "Val": 2}])),
+    ]
+    return int_df, zone_constraints, full_constraints
+
+
+def test_optimize_repair_zone_reaches_floor_and_preserves_anchor():
+    int_df, zone_constraints, full_constraints = toy_infeasible_repair_zone()
+    out, stats = optimize_repair_zone(int_df.copy(), zone_constraints, anchor_name="AgeGender")
+
+    # Optimal secondary violation equals the proven floor (2 here).
+    assert stats["status"] == "Optimal"
+    assert stats["secondary_l1"] == 2.0
+
+    # Output is a valid integer table with the population conserved.
+    assert (out["n"] >= 0).all()
+    assert out["n"].dtype.kind in "iu"
+    assert int(out["n"].sum()) == int(int_df["n"].sum()) == 2
+
+    # Anchor (controlling margin) held exactly.
+    anchor_only = [full_constraints[0]]
+    results, certified = certify_population_margins(out, anchor_only, weight_col="n", tol=0.0)
+    assert certified
+    assert summarize(results) is Verdict.CERTIFIED
+
+    # The floor oracle certifies the optimised table: it sits *at* the floor.
+    floor_results, summary = certify_secondary_margins_vs_floor(
+        out, anchor_only, [full_constraints[1]], weight_col="n", zone_col="ZoneID"
+    )
+    assert summary["gap_to_floor"] == 0.0
+    assert summarize(floor_results) is Verdict.CERTIFIED
 
 
 def test_swap_repair_zone_matches_old_copy_and_preserves_margins():

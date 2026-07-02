@@ -108,6 +108,76 @@ def compute_zone_residuals(int_df_zone, constraints, anchor_name: str = DEFAULT_
     return resid
 
 
+def optimize_repair_zone(
+    int_df_zone,
+    constraints,
+    anchor_name: str = DEFAULT_ANCHOR_NAME,
+    key_cols: Sequence[str] = DEFAULT_KEY_COLS,
+    time_limit: float = 120,
+    msg: bool = False,
+):
+    """Repair a zone's integer table optimally: minimise total secondary-margin
+    L1 violation subject to the controlling (anchor) margin held exactly.
+
+    This is the optimal counterpart to :func:`swap_repair_zone`. The controlling
+    margin is pinned to its target as a hard integer equality; every secondary
+    margin is soft with L1 slack; free non-negative integer counts are allowed on
+    the zone's populated cells. The optimal objective is the *floor* -- the
+    minimum secondary violation any integer table can achieve under the exact
+    controlling totals -- so the returned table attains, by construction, the
+    best secondary approximation the paper's contract allows. Certify the result
+    with ``oracles.certify_secondary_margins_vs_floor`` (it will sit at the
+    floor) and ``oracles.certify_population_margins`` on the anchor (exact).
+
+    Mirrors the per-zone calling convention of :func:`swap_repair_zone`:
+    ``constraints`` are per-zone ``ConstraintSpec`` (dims without ``ZoneID``,
+    ``cs.df`` filtered to the zone), one of them named ``anchor_name``.
+    """
+    import pulp
+
+    key_cols = list(key_cols)
+    df = int_df_zone.reset_index(drop=True)
+    orig = df["n"].to_numpy(dtype=float)
+    N = len(df)
+
+    prob = pulp.LpProblem("optimize_repair_zone", pulp.LpMinimize)
+    v = [pulp.LpVariable(f"v_{i}", lowBound=0, cat="Integer") for i in range(N)]
+
+    anchor = next(cs for cs in constraints if cs.name == anchor_name)
+    anchor_tgt = anchor.df.groupby(list(anchor.dims), observed=True, sort=False)[anchor.val_col].sum()
+    for key, idxs in df.groupby(list(anchor.dims), observed=True, sort=False).indices.items():
+        t = int(round(float(anchor_tgt.loc[key]))) if key in anchor_tgt.index else 0
+        prob += pulp.lpSum(v[i] for i in idxs) == t
+
+    slack = []
+    s = 0
+    for cs in constraints:
+        if cs.name == anchor_name:
+            continue
+        tgt = cs.df.groupby(list(cs.dims), observed=True, sort=False)[cs.val_col].sum()
+        for key, idxs in df.groupby(list(cs.dims), observed=True, sort=False).indices.items():
+            t = float(tgt.loc[key]) if key in tgt.index else 0.0
+            sp = pulp.LpVariable(f"sp_{s}", lowBound=0)
+            sm = pulp.LpVariable(f"sm_{s}", lowBound=0)
+            s += 1
+            slack += [sp, sm]
+            prob += pulp.lpSum(v[i] for i in idxs) + sp - sm == t
+
+    prob += pulp.lpSum(slack)
+    prob.solve(pulp.PULP_CBC_CMD(msg=msg, timeLimit=time_limit))
+
+    status = pulp.LpStatus[prob.status]
+    df = df.copy()
+    df["n"] = [int(round(pulp.value(vi) or 0.0)) for vi in v]
+    stats = {
+        "status": status,
+        "secondary_l1": float(pulp.value(prob.objective) or 0.0),
+        "moves_total": float(np.abs(df["n"].to_numpy(dtype=float) - orig).sum()),
+    }
+    out_cols = ["ZoneID", *key_cols, "n"]
+    return df[out_cols].copy(), stats
+
+
 def swap_repair_zone(
     int_df_zone,
     frac_df_zone,

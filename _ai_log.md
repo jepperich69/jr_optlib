@@ -127,3 +127,18 @@
 **Outcome:** We now have a clean, decoupled optimization module for Lagrangian methods. The exact subgradient loop used in the SAA paper is encapsulated and independently verifiable.
 **Next steps:** Push jr_optlib to GitHub.
 **Git ref:** -
+
+---
+
+## Session 2026-07-02 (Claude: secondary-margin floor oracle + optimal repair)
+**Agent:** Claude Opus 4.8
+**Goal:** Fix the PopInt secondary-margin oracle to match the paper's contract (controlling margins exact, secondary margins approximate) and add an optimal repair primitive.
+**Files touched:**
+- src/jr_optlib/oracles/population.py -- added certify_secondary_margins_vs_floor: per-zone min-violation MIP (controlling pinned exactly, secondary soft L1) yields the proven floor; secondary margins are judged against that floor, never against zero or a hand-picked tolerance.
+- src/jr_optlib/population/integerize.py -- added optimize_repair_zone: min-total-secondary-L1 MIP with the controlling margin held exactly. Optimal counterpart to swap_repair_zone; output attains the floor by construction.
+- src/jr_optlib/oracles/__init__.py, src/jr_optlib/population/__init__.py -- exports.
+- tests/test_population_hard_ipf.py -- new test: optimize_repair_zone reaches the floor on an infeasible-secondary zone, conserves population, holds the anchor exactly, and is certified by certify_secondary_margins_vs_floor.
+- registry/functions.yaml, registry/INDEX.md -- registered both.
+**Outcome:** The 4 prior PopInt FAILs were an oracle-specification error -- they demanded exact secondary margins, which is provably infeasible (floor = 489 L1 across 98 zones; 0/98 zones can reach zero). With the corrected oracle the PopInt model-check is CERTIFIED=3 CHECKED=4 FAIL=0 (controlling AgeGender certified exact before and after repair). New methodological finding: the greedy swap leaves 40855 secondary L1, ~83x above the 489 floor; optimize_repair_zone reaches the floor exactly in all 98/98 zones (~34s) with the anchor still exact. Per-margin swap -> LP: AgeChildren 9235 -> 15, AgeFamily 4996 -> 0, AgeIncome 13894 -> 128, AgeLma 12730 -> 346. Full suite 110 tests pass.
+**Next steps:** Paper decision -- either soften the "as closely as feasible" wording or replace the greedy swap with optimize_repair_zone and report the 40855 -> 489 improvement as a result. Push jr_optlib (helpi 23) when ready.
+**Git ref:** -

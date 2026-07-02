@@ -37,7 +37,10 @@ from jr_optlib.oracles.setcover import (
     setcover_feasible,
     setcover_cost,
 )
-from jr_optlib.oracles.population import certify_population_margins
+from jr_optlib.oracles.population import (
+    certify_population_margins,
+    certify_secondary_margins_vs_floor,
+)
 from jr_optlib.oracles.sampling import certify_detailed_balance
 from jr_optlib.oracles.vsp import certify_vsp_heuristic_chain
 
@@ -61,6 +64,7 @@ __all__ = [
     "matrix_to_covers",
     "certify_setcover_solution",
     "certify_population_margins",
+    "certify_secondary_margins_vs_floor",
     "certify_detailed_balance",
     "certify_vsp_heuristic_chain",
 ]

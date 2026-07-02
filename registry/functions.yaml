@@ -359,6 +359,29 @@
   tests: tests/test_population_hard_ipf.py
   certifies: true
 
+- id: population.optimize_repair_zone
+  name: Optimal population repair (min secondary L1)
+  kind: function
+  summary: Repairs one zone's integer population table to the achievable floor -- minimises total secondary-margin L1 violation via a MIP with the controlling (anchor) margin pinned exactly. Optimal counterpart to swap_repair_zone.
+  tags: [population-synthesis, integerization, repair, anchor-preserving, mip, pulp, popint]
+  status: vetted
+  source: Pub_PopInt_PartB (optimal alternative to greedy swap repair)
+  added: 2026-07-02
+  provenance: >
+    Min-cost integer program: controlling margin held as hard equality at its
+    target, every secondary margin soft with L1 slack, free non-negative integer
+    cell counts. The optimal objective is the proven floor, so the output attains
+    the best secondary approximation possible under the exact controlling totals.
+    Unit-tested on an infeasible-secondary zone: reaches the floor (=2), conserves
+    population, holds the anchor exactly, and is certified by
+    certify_secondary_margins_vs_floor. On the PopInt large-scale data it drives
+    secondary L1 from 40855 (greedy swap) to the 489 floor.
+  module: jr_optlib.population.integerize
+  signature: "optimize_repair_zone(int_df_zone, constraints, anchor_name='Age x Gender', key_cols=DEFAULT_KEY_COLS, time_limit=120, msg=False) -> (int_df_zone, stats)"
+  oracles: [population.certify_secondary_margins_vs_floor, population.certify_population_margins]
+  tests: tests/test_population_hard_ipf.py
+  certifies: true
+
 - id: population.swap_repair_zone
   name: Anchor-preserving population swap repair
   kind: function
@@ -375,7 +398,7 @@
     depends on the supplied integer residual structure.
   module: jr_optlib.population.integerize
   signature: "swap_repair_zone(int_df_zone, frac_df_zone, constraints, max_passes=3, max_moves_per_slice=2000, ghost_x_eps=1e-6, anchor_name='Age x Gender') -> (int_df_zone, stats)"
-  oracles: [population.certify_population_margins]
+  oracles: [population.certify_population_margins, population.certify_secondary_margins_vs_floor]
   tests: tests/test_population_hard_ipf.py
   certifies: false
 
