@@ -29,7 +29,7 @@ Schema: `SCHEMA.md`.
 | `setcover.solve_mip` | Gurobi set-cover MIP solve with bound/gap | gap_certificate / certify_setcover_solution | yes | vetted |
 | `population.HardIPF` | high-dimensional IPF over long population tables | certify_population_margins | yes | vetted |
 | `population.swap_repair_zone` | anchor-preserving population integer swap repair | certify_population_margins (controlling, CHECKED) + certify_secondary_margins_vs_floor (secondary vs LP floor) | no | vetted |
-| `population.optimize_repair_zone` | optimal MIP repair: min secondary-margin L1 with anchor pinned exactly | certify_secondary_margins_vs_floor (sits at floor) + certify_population_margins (anchor exact) | yes | vetted |
+| `population.optimize_repair_zone` | floor bound / diagnostic: min secondary-margin L1 with anchor pinned exactly (NOT a drop-in repair -- collapses fractional overlap) | certify_secondary_margins_vs_floor (sits at floor) + certify_population_margins (anchor exact) | yes | vetted |
 | `population.step1_split` | deterministic floor split for population integerization | certify_population_margins (pipeline precondition) | no | vetted |
 | `population.step2_anchor_pps` | anchor-conditioned PPS integer additions | certify_population_margins (CHECKED) | no | vetted |
 | `vsp.run_vsp_mh_chain` | VSP Metropolis local search | certify_vsp_heuristic_chain | no | vetted |

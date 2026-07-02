@@ -374,8 +374,16 @@
     the best secondary approximation possible under the exact controlling totals.
     Unit-tested on an infeasible-secondary zone: reaches the floor (=2), conserves
     population, holds the anchor exactly, and is certified by
-    certify_secondary_margins_vs_floor. On the PopInt large-scale data it drives
-    secondary L1 from 40855 (greedy swap) to the 489 floor.
+    certify_secondary_margins_vs_floor.
+    CAUTION -- use as a BOUND/DIAGNOSTIC, not as a drop-in repair method. It
+    minimizes secondary-margin L1 only, ignoring closeness to the fractional/KL
+    solution. On the PopInt data it drives secondary L1 from 40855 (greedy swap)
+    to the 489 floor but collapses overlap with the fractional solution (theta
+    0.98 -> 0.22), i.e. produces a margin-correct but demographically implausible
+    table. Preserving overlap AND reaching the floor is a lexicographic two-phase
+    MIP that is intractable at scale (CBC times out per municipality). See
+    Pub_PopInt_PartB results: the floor is reported as a lower bound, swap repair
+    is kept as the method.
   module: jr_optlib.population.integerize
   signature: "optimize_repair_zone(int_df_zone, constraints, anchor_name='Age x Gender', key_cols=DEFAULT_KEY_COLS, time_limit=120, msg=False) -> (int_df_zone, stats)"
   oracles: [population.certify_secondary_margins_vs_floor, population.certify_population_margins]
