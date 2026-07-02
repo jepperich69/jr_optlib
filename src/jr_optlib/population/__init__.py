@@ -2,5 +2,20 @@
 """Population-synthesis primitives."""
 
 from jr_optlib.population.hard_ipf import ConstraintSpec, HardIPF
+from jr_optlib.population.integerize import (
+    GHOST_X_EPS,
+    SWAP_MAX_MOVES_PER_SLICE,
+    SWAP_MAX_PASSES,
+    compute_zone_residuals,
+    swap_repair_zone,
+)
 
-__all__ = ["ConstraintSpec", "HardIPF"]
+__all__ = [
+    "ConstraintSpec",
+    "GHOST_X_EPS",
+    "HardIPF",
+    "SWAP_MAX_MOVES_PER_SLICE",
+    "SWAP_MAX_PASSES",
+    "compute_zone_residuals",
+    "swap_repair_zone",
+]

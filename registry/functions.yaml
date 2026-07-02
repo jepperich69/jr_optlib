@@ -358,3 +358,23 @@
   oracles: [population.certify_population_margins]
   tests: tests/test_population_hard_ipf.py
   certifies: true
+
+- id: population.swap_repair_zone
+  name: Anchor-preserving population swap repair
+  kind: function
+  summary: Repairs one zone's integer population table by moving mass within Age x Gender slices to satisfy non-anchor margins.
+  tags: [population-synthesis, integerization, swap-repair, anchor-preserving, pandas, popint]
+  status: vetted
+  source: Pub_PopInt_PartB/Large Scale/Intege_Paper_Minimal_SWAP_ARC.py (numerics-preserving migration)
+  added: 2026-07-02
+  provenance: >
+    Migration verified against the active PopInt large-scale script on a
+    synthetic zone where the repair performs an Age x Gender preserving swap.
+    Certified on the test instance by certify_population_margins over the
+    integer n column; in general this repair is CHECKED because feasibility
+    depends on the supplied integer residual structure.
+  module: jr_optlib.population.integerize
+  signature: "swap_repair_zone(int_df_zone, frac_df_zone, constraints, max_passes=3, max_moves_per_slice=2000, ghost_x_eps=1e-6, anchor_name='Age x Gender') -> (int_df_zone, stats)"
+  oracles: [population.certify_population_margins]
+  tests: tests/test_population_hard_ipf.py
+  certifies: false

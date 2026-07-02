@@ -11,7 +11,7 @@ import numpy as np
 import pandas as pd
 
 from jr_optlib.oracles import Verdict, certify_population_margins, summarize
-from jr_optlib.population import ConstraintSpec, HardIPF
+from jr_optlib.population import ConstraintSpec, HardIPF, swap_repair_zone
 
 
 JR = Path(r"C:\Users\rich\OneDrive - Danmarks Tekniske Universitet\JR")
@@ -78,6 +78,81 @@ def toy_problem():
     return seed, constraints
 
 
+def toy_swap_problem(anchor_name="AgeGender"):
+    rows = [
+        {
+            "ZoneID": 10,
+            "AgeID": 1,
+            "NumChildID": 1,
+            "FamID": 1,
+            "GenderID": 1,
+            "IncomeID": 1,
+            "LmaID": 1,
+            "n": 1,
+            "x": 0.2,
+        },
+        {
+            "ZoneID": 10,
+            "AgeID": 1,
+            "NumChildID": 1,
+            "FamID": 1,
+            "GenderID": 1,
+            "IncomeID": 2,
+            "LmaID": 1,
+            "n": 0,
+            "x": 0.8,
+        },
+        {
+            "ZoneID": 10,
+            "AgeID": 1,
+            "NumChildID": 1,
+            "FamID": 1,
+            "GenderID": 2,
+            "IncomeID": 1,
+            "LmaID": 1,
+            "n": 0,
+            "x": 0.0,
+        },
+        {
+            "ZoneID": 10,
+            "AgeID": 1,
+            "NumChildID": 1,
+            "FamID": 1,
+            "GenderID": 2,
+            "IncomeID": 2,
+            "LmaID": 1,
+            "n": 1,
+            "x": 1.0,
+        },
+    ]
+    both = pd.DataFrame(rows)
+    int_df = both.drop(columns=["x"]).copy()
+    frac_df = both.drop(columns=["n"]).copy()
+    constraints = [
+        ConstraintSpec(
+            anchor_name,
+            ("AgeID", "GenderID"),
+            pd.DataFrame(
+                [
+                    {"AgeID": 1, "GenderID": 1, "Val": 1},
+                    {"AgeID": 1, "GenderID": 2, "Val": 1},
+                ]
+            ),
+        ),
+        ConstraintSpec(
+            "AgeIncome",
+            ("AgeID", "IncomeID"),
+            pd.DataFrame(
+                [
+                    {"AgeID": 1, "IncomeID": 1, "Val": 0},
+                    {"AgeID": 1, "IncomeID": 2, "Val": 2},
+                ]
+            ),
+        ),
+    ]
+    return int_df, frac_df, constraints
+
+
 def test_hard_ipf_matches_old_copy():
     old = load_old_module()
     seed, constraints = toy_problem()
@@ -121,3 +196,35 @@ def test_population_margin_oracle_certifies_hard_ipf_and_catches_error():
     bad_results, bad_certified = certify_population_margins(bad, constraints, weight_col="x", tol=1e-6)
     assert not bad_certified
     assert summarize(bad_results) is Verdict.FAIL
+
+
+def test_swap_repair_zone_matches_old_copy_and_preserves_margins():
+    old = load_old_module()
+    int_df, frac_df, constraints = toy_swap_problem(anchor_name=old.ANCHOR_NAME)
+    old_constraints = [
+        old.ConstraintSpec(c.name, c.dims, c.df.copy(), c.val_col)
+        for c in constraints
+    ]
+
+    old_out, old_stats = old.swap_repair_zone(
+        int_df.copy(), frac_df.copy(), old_constraints, max_passes=3, max_moves_per_slice=10
+    )
+    new_out, new_stats = swap_repair_zone(
+        int_df.copy(),
+        frac_df.copy(),
+        constraints,
+        max_passes=3,
+        max_moves_per_slice=10,
+        anchor_name=old.ANCHOR_NAME,
+    )
+
+    pd.testing.assert_frame_equal(
+        new_out.reset_index(drop=True),
+        old_out.reset_index(drop=True),
+        check_dtype=False,
+    )
+    assert new_stats == old_stats == {"moves_total": 1.0}
+
+    results, certified = certify_population_margins(new_out, constraints, weight_col="n", tol=0.0)
+    assert certified
+    assert summarize(results) is Verdict.CERTIFIED

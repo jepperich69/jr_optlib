@@ -28,6 +28,7 @@ Schema: `SCHEMA.md`.
 | `setcover.polish_solution` | restricted Gurobi polish for set cover | certify_setcover_solution (CHECKED) | no | vetted |
 | `setcover.solve_mip` | Gurobi set-cover MIP solve with bound/gap | gap_certificate / certify_setcover_solution | yes | vetted |
 | `population.HardIPF` | high-dimensional IPF over long population tables | certify_population_margins | yes | vetted |
+| `population.swap_repair_zone` | anchor-preserving population integer swap repair | certify_population_margins (CHECKED) | no | vetted |
 
 ## Known-answer instances (`instances.yaml`)
 
