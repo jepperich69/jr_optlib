@@ -33,3 +33,16 @@
 **Next steps:** LP-family migration (`solve_transport_opt`, `round_transport_min_cost_lp`, and the buggy double-defined `round_transport_greedy_push`) needs an env with ortools or pulp -- check the `pyopt` env or add a scipy.optimize.linprog reference path as the exact-transport oracle. Then resolve the 789/882 double-definition during that migration.
 **Git ref:** 715914f
 
+## Session 2026-07-02 (migration 2: LP-family + double-def fix)
+**Agent:** Claude Opus 4.8
+**Goal:** Migrate the LP-family transport functions and resolve the round_transport_greedy_push double-definition.
+**Env note:** base/pyopt lacked ortools+pulp; installed `pulp` 3.3.2 (bundles CBC) into base per user choice. (pyopt has gurobipy but the paper transport code uses ortools/pulp, not gurobi.)
+**Files touched:**
+- `src/jr_optlib/transport/_backend.py` (new) -- ortools-preferred / pulp fallback detection.
+- `src/jr_optlib/transport/lp_transport.py` (new) -- solve_transport_opt, round_transport_min_cost_lp, round_transport_min_cost_lp_restricted, and the ACTIVE round_transport_greedy_push (:882). The dead :789 shadow-copy is intentionally not migrated (double-def bug resolved).
+- `src/jr_optlib/oracles/transport.py` -- `transport_optimal_cost` (independent scipy.linprog HiGHS reference) + `certify_transport` (feasibility + optimal-cost; require_optimal toggle for exact vs heuristic).
+- exports; `tests/test_lp_transport.py` (20 tests); `registry/functions.yaml`+`INDEX.md`+`references.yaml`; `pyproject.toml` (pulp/pyyaml test deps, transport-lp extra).
+**Outcome:** 64 tests pass total. Migration verified vs the live paper copy on OBJECTIVE+feasibility (LP degeneracy -> plan not unique, cost is). Exact solvers CERTIFIED against scipy; greedy heuristic CHECKED; corruption FAILs. Committed 7532234.
+**Next steps:** migrate the remaining rounders (min_cost_mcf, min_cost_approx, floor_residue) + _mask/_reopt helpers; then the population-synthesis rounding (round_transport_* on contingency tables). Consider a /verify-model run against Pub_MIPEntropy_MPC now that the transport oracles exist. GitHub push still pending user request.
+**Git ref:** 7532234
+

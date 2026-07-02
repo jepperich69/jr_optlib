@@ -203,6 +203,46 @@ def certify_transport(X: np.ndarray, a: np.ndarray, b: np.ndarray, C: np.ndarray
     return results, certified
 
 
+def certify_dependent_round(Xint: np.ndarray, X: np.ndarray,
+                            row_marg: np.ndarray, col_marg: np.ndarray,
+                            tol: float = 1e-6) -> Tuple[list, bool]:
+    """Certify a dependent-rounding of fractional table X to integer Xint.
+
+    The rounding contract (all three must hold): exact marginals, integrality,
+    and per-cell deviation < 1. A rounder satisfying all three provably did its
+    job -- these are independent recomputations of the output, not a re-run.
+    """
+    Xint = np.asarray(Xint, float)
+    X = np.asarray(X, float)
+
+    r_marg = marginal_residual(Xint, row_marg, col_marg, tol=tol)
+
+    integ = float(np.abs(Xint - np.rint(Xint)).max())
+    r_int = OracleResult(
+        name="integrality", passed=integ <= tol, residual=integ, tol=tol,
+        certifies=False, detail="max |Xint - round(Xint)|",
+    )
+
+    dev = float(np.abs(Xint - X).max())
+    r_dev = OracleResult(
+        name="cell_deviation_lt_1", passed=dev < 1.0 + tol, residual=dev, tol=1.0,
+        certifies=False, detail="max |Xint - X| must be < 1",
+    )
+
+    neg = float(min(0.0, Xint.min()))
+    r_neg = OracleResult(
+        name="nonnegative", passed=Xint.min() >= -tol, residual=abs(neg), tol=tol,
+        certifies=False, detail=f"min entry={Xint.min():.3g}",
+    )
+
+    results = [r_marg, r_int, r_dev, r_neg]
+    certified = all(r.passed for r in results)
+    if certified:
+        # the contract (exact marginals + integrality + <1 deviation) is a proof
+        r_dev.certifies = True
+    return results, certified
+
+
 def certify_sinkhorn(X: np.ndarray, a: np.ndarray, b: np.ndarray, C: np.ndarray,
                      tau: float = 0.05, tol: float = 1e-6) -> Tuple[list, bool]:
     """Certify an entropic-OT (Sinkhorn) plan. Returns (results, certified).

@@ -138,6 +138,115 @@
   tests: tests/test_lp_transport.py
   certifies: false
 
+- id: transport.round_transport_min_cost_mcf
+  name: Min-cost-flow integer transport
+  kind: function
+  summary: Integer transport via OR-Tools min-cost flow (TU); falls back to the LP rounder when the graph solver is unavailable.
+  tags: [transport, integerization, rounding, min-cost-flow, exact]
+  status: vetted
+  source: Pub_MIPEntropy_MPC/code/mip_hybrid/apps/population_transport.py (numerics-preserving migration)
+  added: 2026-07-02
+  provenance: Verified vs old copy (objective+feasibility); optimal -> CERTIFIED by certify_transport vs scipy.
+  module: jr_optlib.transport.rounding
+  signature: "round_transport_min_cost_mcf(a, b, C, topk=None) -> (Xint, elapsed)"
+  oracles: [transport.certify_transport]
+  tests: tests/test_rounding.py
+  certifies: true
+
+- id: transport.round_transport_min_cost_approx
+  name: Restricted-support approximate transport rounder
+  kind: function
+  summary: Restricted-support LP over top-k-by-cost arcs (+ high-mass Sinkhorn arcs); full-LP fallback. Returns (Xint, time, used_restricted).
+  tags: [transport, integerization, rounding, heuristic, restricted]
+  status: vetted
+  source: Pub_MIPEntropy_MPC/code/mip_hybrid/apps/population_transport.py (numerics-preserving migration)
+  added: 2026-07-02
+  provenance: Verified vs old copy (objective+feasibility+flag). Feasible; certify_transport(require_optimal=False) -> CHECKED (restricted support may be suboptimal).
+  module: jr_optlib.transport.rounding
+  signature: "round_transport_min_cost_approx(a, b, C, Xtau=None, topk=30, eta=0.0) -> (Xint, elapsed, used_restricted)"
+  oracles: [transport.certify_transport]
+  tests: tests/test_rounding.py
+  certifies: false
+
+- id: transport.round_transport_floor_residue_lp
+  name: Floor-residue LP alias
+  kind: function
+  summary: Backward-compatible alias for round_transport_min_cost_lp (kept from the paper API).
+  tags: [transport, integerization, rounding, alias]
+  status: vetted
+  source: Pub_MIPEntropy_MPC/code/mip_hybrid/apps/population_transport.py
+  added: 2026-07-02
+  provenance: Delegates to round_transport_min_cost_lp; same certificate.
+  module: jr_optlib.transport.rounding
+  signature: "round_transport_floor_residue_lp(a, b, C) -> (Xint, elapsed)"
+  oracles: [transport.certify_transport]
+  tests: tests/test_rounding.py
+  certifies: true
+
+- id: transport.dependent_round_2d
+  name: Dependent rounding of a 2D table (dispatcher)
+  kind: function
+  summary: Round a fractional 2D table (e.g. IPF fit) to integers preserving both marginals, per-cell deviation < 1. Dispatches mcf/lp/sparsified.
+  tags: [population-synthesis, integerization, dependent-rounding, contingency]
+  status: vetted
+  source: Pub_MIPEntropy_MPC/code/mip_hybrid/apps/population_transport.py (was private _dependent_round_2d_*; public here)
+  added: 2026-07-02
+  provenance: >
+    Completes the ipf_2d -> integer pipeline. Contract (exact marginals +
+    integrality + per-cell deviation < 1) certified by certify_dependent_round.
+    Migration verified vs the old private helpers on contract + residual
+    objective (residual LP has tied optima -> plan not unique).
+  module: jr_optlib.transport.population_round
+  signature: "dependent_round_2d(X, row_marg, col_marg, method='mcf', sparsify=False, ...) -> (Xint, elapsed)"
+  oracles: [transport.certify_dependent_round]
+  tests: tests/test_population_round.py
+  certifies: true
+
+- id: transport.dependent_round_2d_lp
+  name: Dependent rounding (dense LP)
+  kind: function
+  summary: Residual 0-1 LP rounding of a fractional table (TU -> integral); exact marginals, per-cell deviation < 1.
+  tags: [population-synthesis, integerization, dependent-rounding, lp]
+  status: vetted
+  source: Pub_MIPEntropy_MPC/code/mip_hybrid/apps/population_transport.py (was _dependent_round_2d_lp)
+  added: 2026-07-02
+  provenance: Certified by certify_dependent_round; migration verified vs old copy on contract + residual objective.
+  module: jr_optlib.transport.population_round
+  signature: "dependent_round_2d_lp(X, row_marg, col_marg) -> (Xint, elapsed)"
+  oracles: [transport.certify_dependent_round]
+  tests: tests/test_population_round.py
+  certifies: true
+
+- id: transport.dependent_round_2d_lp_sparsified
+  name: Dependent rounding (sparsified LP)
+  kind: function
+  summary: Sparsified residual LP (top-K fractional + eta-prune) with dense-LP fallback; same contract as the dense version.
+  tags: [population-synthesis, integerization, dependent-rounding, lp, sparsified]
+  status: vetted
+  source: Pub_MIPEntropy_MPC/code/mip_hybrid/apps/population_transport.py (was _dependent_round_2d_lp_sparsified)
+  added: 2026-07-02
+  provenance: Certified by certify_dependent_round.
+  module: jr_optlib.transport.population_round
+  signature: "dependent_round_2d_lp_sparsified(X, row_marg, col_marg, topk_extra=8, eta=0.02, eps_slack=0.0) -> (Xint, elapsed)"
+  oracles: [transport.certify_dependent_round]
+  tests: tests/test_population_round.py
+  certifies: true
+
+- id: transport.dependent_round_2d_mcf
+  name: Dependent rounding (min-cost flow)
+  kind: function
+  summary: Residual 0-1 min-cost flow rounding via OR-Tools; dense-LP fallback when the graph solver is unavailable.
+  tags: [population-synthesis, integerization, dependent-rounding, min-cost-flow]
+  status: vetted
+  source: Pub_MIPEntropy_MPC/code/mip_hybrid/apps/population_transport.py (was _dependent_round_2d_mcf)
+  added: 2026-07-02
+  provenance: Certified by certify_dependent_round.
+  module: jr_optlib.transport.population_round
+  signature: "dependent_round_2d_mcf(X, row_marg, col_marg, cost_scale=200000, topk_extra=8) -> (Xint, elapsed)"
+  oracles: [transport.certify_dependent_round]
+  tests: tests/test_population_round.py
+  certifies: true
+
 - id: transport.make_contingency2d
   name: Synthetic 2D marginals
   kind: function

@@ -14,6 +14,13 @@ Schema: `SCHEMA.md`.
 | `transport.round_transport_min_cost_lp` | integer transport via LP | certify_transport | yes | vetted |
 | `transport.round_transport_min_cost_lp_restricted` | integer transport LP on arc mask | certify_transport | no | vetted |
 | `transport.round_transport_greedy_push` | reduced-cost greedy rounding (bug-fixed) | certify_transport (CHECKED) | no | vetted |
+| `transport.round_transport_min_cost_mcf` | min-cost-flow integer transport (LP fallback) | certify_transport | yes | vetted |
+| `transport.round_transport_min_cost_approx` | restricted-support approx rounder | certify_transport (CHECKED) | no | vetted |
+| `transport.round_transport_floor_residue_lp` | alias -> round_transport_min_cost_lp | certify_transport | yes | vetted |
+| `transport.dependent_round_2d` | round fractional 2D table to integers (dispatcher) | certify_dependent_round | yes | vetted |
+| `transport.dependent_round_2d_lp` | dependent rounding (dense LP) | certify_dependent_round | yes | vetted |
+| `transport.dependent_round_2d_lp_sparsified` | dependent rounding (sparsified LP) | certify_dependent_round | yes | vetted |
+| `transport.dependent_round_2d_mcf` | dependent rounding (min-cost flow) | certify_dependent_round | yes | vetted |
 | `transport.make_transport` | seeded balanced transport instance | -- | no | vetted |
 | `transport.make_contingency2d` | seeded 2D marginals (planted instance) | -- | no | vetted |
 
