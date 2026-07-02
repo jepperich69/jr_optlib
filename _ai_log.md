@@ -85,6 +85,23 @@
 
 ---
 
+## Session 2026-07-02 (Codex: PopInt residual diagnosis / close)
+**Agent:** Codex GPT-5
+**Goal:** Diagnose why the PopInt model-check failed on non-anchor margins and close with a precise handover.
+**Files touched:**
+- `Pub_PopInt_PartB/_model_checks/2026-07-02_13-56-42/diagnose_residuals.py` -- ranks repaired residuals by zone and margin; writes `residuals_by_zone_margin.csv` and `worst_zone_support.csv`.
+- `Pub_PopInt_PartB/_model_checks/2026-07-02_13-56-42/try_full_residual_repair.py` -- diagnostic replay for worst zone using residual updates for all affected non-anchor margins after each swap.
+- `Pub_PopInt_PartB/_model_checks/2026-07-02_13-56-42/residuals_by_zone_margin.csv`, `worst_zone_support.csv` -- generated diagnostic outputs.
+**Outcome:** Worst repaired residual is zone `336000`, margin `AgeIncome`, L1 gap `184`. Global repaired L1 gaps: AgeIncome `13894`, AgeLma `12730`, AgeChildren `9235`, AgeFamily `4996`. Support exists in most anchor slices, so this is not obviously a pure support infeasibility. A capped corrected-residual replay on zone `336000` reduced AgeIncome relative to stored repaired (`184 -> 140/148`) and AgeLma (`140 -> 128`) but worsened/varied AgeChildren and AgeFamily; this suggests the remaining problem is a multi-margin repair objective/strategy issue, not merely the stale residual tracker.
+**Next steps:**
+- Build a real PopInt repair oracle/solver for one zone: given fixed AgeGender anchors and target non-anchor margins, solve or prove infeasibility as a min-cost correction problem.
+- Use that oracle on zone `336000` first to separate "exact repair impossible" from "greedy swap repair incomplete."
+- If exact repair is impossible or not intended, change paper/result claims to approximation language and add relative/tolerance residual oracles.
+- If exact repair is intended, replace or augment greedy swap repair with an optimization-backed local repair.
+**Git ref:** f5443ed
+
+---
+
 ## Session 2026-07-02 (handoff prep for Codex)
 **Agent:** Claude Opus 4.8
 **Goal:** User is low on tokens and wants to continue the jr_optlib migration ("restructuring") in Codex or Gemini. Assess whether that is trustworthy and make sure the next agent boots with full context.
