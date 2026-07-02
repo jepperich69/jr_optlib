@@ -141,4 +141,4 @@
 - registry/functions.yaml, registry/INDEX.md -- registered both.
 **Outcome:** The 4 prior PopInt FAILs were an oracle-specification error -- they demanded exact secondary margins, which is provably infeasible (floor = 489 L1 across 98 zones; 0/98 zones can reach zero). With the corrected oracle the PopInt model-check is CERTIFIED=3 CHECKED=4 FAIL=0 (controlling AgeGender certified exact before and after repair). New methodological finding: the greedy swap leaves 40855 secondary L1, ~83x above the 489 floor; optimize_repair_zone reaches the floor exactly in all 98/98 zones (~34s) with the anchor still exact. Per-margin swap -> LP: AgeChildren 9235 -> 15, AgeFamily 4996 -> 0, AgeIncome 13894 -> 128, AgeLma 12730 -> 346. Full suite 110 tests pass.
 **Next steps:** Paper decision -- either soften the "as closely as feasible" wording or replace the greedy swap with optimize_repair_zone and report the 40855 -> 489 improvement as a result. Push jr_optlib (helpi 23) when ready.
-**Git ref:** -
+**Git ref:** d714e07
