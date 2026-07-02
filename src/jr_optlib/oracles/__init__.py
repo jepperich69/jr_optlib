@@ -48,6 +48,12 @@ from jr_optlib.oracles.entropic_qp import (
     certify_entropic_risk_mc,
 )
 from jr_optlib.oracles.nlp import verify_with_gurobi
+from jr_optlib.oracles.choice import certify_mnl, certify_nested_logit
+from jr_optlib.oracles.dp import (
+    certify_transition_contraction,
+    certify_dp_vs_brute_force,
+)
+from jr_optlib.oracles.rl import certify_q_learning_vs_dp
 
 __all__ = [
     "OracleResult",
@@ -75,4 +81,9 @@ __all__ = [
     "certify_entropic_assignment",
     "certify_entropic_risk_mc",
     "verify_with_gurobi",
+    "certify_mnl",
+    "certify_nested_logit",
+    "certify_transition_contraction",
+    "certify_dp_vs_brute_force",
+    "certify_q_learning_vs_dp",
 ]

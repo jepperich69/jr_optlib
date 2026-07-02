@@ -267,7 +267,7 @@
 - id: setcover.solve_entropy_setcover
   name: Entropy-guided set-cover heuristic
   kind: function
-  summary: RICH set-cover core: row-wise entropy relaxation followed by dual-guided rounding and drop-fix pruning.
+  summary: "RICH set-cover core: row-wise entropy relaxation followed by dual-guided rounding and drop-fix pruning."
   tags: [set-cover, entropy, heuristic, rich, rounding]
   status: vetted
   source: Pub_MIPEntropy_MPC/code/mip_hybrid/apps/synth_setcover.py (Gurobi-free core; numerics-preserving migration)
@@ -582,11 +582,13 @@
   kind: function
   summary: Simplified grid distance calculation.
   tags: [optimization, routing, dijkstra, grid, distance]
-  status: vetted
+  status: experimental
   source: Pub_NapstiGranularity_TBA/newSim/newSim.py
   added: 2026-07-02
   provenance: >
     Migrated from NapstiGranularity newSim. Computes O(P*S) distances exactly.
+    No oracle yet -- kept experimental until one is added (a vetted entry must
+    list at least one oracle).
   module: jr_optlib.optimization.routing
   signature: "dijkstra_manhattan(station_positions, person_positions, people_modes) -> dict"
   oracles: []
@@ -596,34 +598,120 @@
   kind: function
   summary: Stochastic User Equilibrium route choice over car + transit.
   tags: [optimization, routing, sue, route-choice, transit]
-  status: vetted
+  status: experimental
   source: Pub_CongestionPMIP_TBA/RICH_bilevel_multinetwork_publication_SUE.py
   added: 2026-07-02
   provenance: >
-    Extracted from CongestionPMIP.
+    Extracted from CongestionPMIP. No oracle yet -- kept experimental until one
+    is added (a vetted entry must list at least one oracle).
   module: jr_optlib.optimization.routing
   signature: "compute_route_choice_shares(...) -> (P_car, P_transit, S_route)"
   oracles: []
-- id: optimization.backward_induction_solver
-  module: jr_optlib.optimization.dp
-  type: DP
-
-- id: optimization.contract_transitions
-  module: jr_optlib.optimization.dp
-  type: DP
 
 - id: optimization.compute_mnl_probabilities
+  name: Multinomial logit probabilities
+  kind: function
+  summary: MNL choice probabilities with a max-shift for numerical stability and optional availability masking.
+  tags: [choice, discrete-choice, logit, mnl, softmax]
+  status: vetted
+  source: extracted for jr_optlib (standard McFadden MNL)
+  added: 2026-07-02
+  provenance: >
+    Verified by certify_mnl against the identities the logit must satisfy:
+    normalization over available alternatives, non-negativity, additive-constant
+    (translation) invariance, and zero probability for unavailable alternatives.
   module: jr_optlib.optimization.choice
-  type: Choice
+  signature: "compute_mnl_probabilities(utilities, availability=None) -> probs"
+  oracles: [choice.certify_mnl]
+  tests: tests/test_optimization_choice.py
+  certifies: false
 
 - id: optimization.compute_logsum
+  name: Logit inclusive value (logsum)
+  kind: function
+  summary: Expected-maximum-utility (logsum) of a choice set, with availability masking.
+  tags: [choice, discrete-choice, logit, logsum, inclusive-value]
+  status: vetted
+  source: extracted for jr_optlib (standard logit logsum)
+  added: 2026-07-02
+  provenance: >
+    Direct known-value test (logsum of equal utilities equals log of the count)
+    and transitive coverage via certify_nested_logit, whose theta=1 consistency
+    check depends on the scaled logsum being correct.
   module: jr_optlib.optimization.choice
-  type: Choice
+  signature: "compute_logsum(utilities, availability=None) -> logsum"
+  oracles: [choice.certify_nested_logit]
+  tests: tests/test_optimization_choice.py
+  certifies: false
 
 - id: optimization.compute_nested_logit_probabilities
+  name: Two-level nested logit probabilities
+  kind: function
+  summary: Marginal, nest, and conditional probabilities for a two-level nested logit.
+  tags: [choice, discrete-choice, nested-logit, gev]
+  status: vetted
+  source: extracted for jr_optlib (McFadden two-level nested logit)
+  added: 2026-07-02
+  provenance: >
+    Verified by certify_nested_logit: McFadden consistency (theta=1 recovers the
+    flat MNL exactly), normalization of the marginal probabilities for generic
+    theta in (0,1], and non-negativity.
   module: jr_optlib.optimization.choice
-  type: Choice
+  signature: "compute_nested_logit_probabilities(utilities, nests, theta, availability=None) -> (probs, nest_probs, conditional_probs)"
+  oracles: [choice.certify_nested_logit]
+  tests: tests/test_optimization_choice.py
+  certifies: false
+
+- id: optimization.backward_induction_solver
+  name: Finite-horizon backward induction
+  kind: function
+  summary: Exact backward-induction DP over a tensor grid of endogenous and stochastic exogenous states.
+  tags: [dp, dynamic-programming, backward-induction, bellman]
+  status: vetted
+  source: extracted for jr_optlib (finite-horizon stochastic DP)
+  added: 2026-07-02
+  provenance: >
+    Certified by certify_dp_vs_brute_force: on a deterministic-exogenous
+    instance every start (endogenous state, exogenous grid point) is an
+    independent finite-horizon shortest-path problem solved by exhaustive
+    enumeration; a match certifies the DP optimum.
+  module: jr_optlib.optimization.dp
+  signature: "backward_induction_solver(T, states, state_idx, exog_grid, n_assets, terminal_value_fn, feasible_next_fn, epoch_cost_fn, P_trans) -> (V, policies, solve_count, wall)"
+  oracles: [dp.certify_dp_vs_brute_force]
+  tests: tests/test_optimization_dp.py
+  certifies: true
+
+- id: optimization.contract_transitions
+  name: DP transition contraction
+  kind: function
+  summary: Expected next-period value under independent per-dimension exogenous transitions.
+  tags: [dp, dynamic-programming, tensor, expectation, transition]
+  status: vetted
+  source: extracted for jr_optlib (DP expectation step)
+  added: 2026-07-02
+  provenance: >
+    Certified by certify_transition_contraction against an independent
+    brute-force expectation over the product grid.
+  module: jr_optlib.optimization.dp
+  signature: "contract_transitions(V_xi, P_list) -> EV"
+  oracles: [dp.certify_transition_contraction]
+  tests: tests/test_optimization_dp.py
+  certifies: true
 
 - id: sampling.run_q_learning_episode
+  name: Tabular Q-learning episode
+  kind: function
+  summary: One episode of risk-neutral or risk-sensitive (exponential) tabular Q-learning.
+  tags: [rl, reinforcement-learning, q-learning, risk-sensitive]
+  status: vetted
+  source: extracted for jr_optlib (episodic tabular Q-learning)
+  added: 2026-07-02
+  provenance: >
+    Verified by certify_q_learning_vs_dp: on a small deterministic MDP the
+    risk-neutral learner converges to the exact DP optimum computed by an
+    independent backward recursion.
   module: jr_optlib.sampling.rl
-  type: RL
+  signature: "run_q_learning_episode(T, initial_state, action_space_fn, env_step_fn, get_terminal_value_fn, Q, U, eta, mode, eps, alpha) -> None"
+  oracles: [rl.certify_q_learning_vs_dp]
+  tests: tests/test_sampling_rl.py
+  certifies: false
