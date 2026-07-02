@@ -533,3 +533,32 @@
   oracles: []
   tests: tests/test_optimization_lagrangian.py
   certifies: false
+
+- id: optimization.entropic_qp
+  name: Entropic-risk assignment (QP / Hungarian / MIQP)
+  kind: function-family
+  summary: >
+    Entropic (exponential) risk for Gaussian assignment costs and four solvers:
+    closed-form risk rho_eta_formula (mean + (eta/2) variance), Monte Carlo check
+    rho_eta_mc, convex QP over the Birkhoff polytope solve_qp (SLSQP, 3 warm
+    starts), exact independent-case Hungarian solve_hungarian_qp / risk-neutral
+    solve_hungarian_rn (scipy linear_sum_assignment), and correlated-case MIQP
+    solve_miqp_gurobi. Helpers build_equicorrelation_cov and sample_costs.
+  tags: [optimization, assignment, qp, miqp, hungarian, entropic-risk, saa, gurobi, scipy]
+  status: vetted
+  source: Pub_QP_SAA_MC/code/solvers.py + data.py (numerics-preserving migration)
+  added: 2026-07-02
+  provenance: >
+    Extracted verbatim in numerics from the paper copy; the module-global mean
+    matrix, dimension, and sampler are now explicit parameters. Differential
+    tests assert exact agreement with the live Pub_QP_SAA_MC copy: formula and
+    seeded MC match bit-for-bit; solve_qp matches to 1e-9 (deterministic SLSQP);
+    Hungarian x/pi/obj match exactly; MIQP obj matches the Hungarian optimum in
+    the diagonal case. Note: the paper's solve_hungarian_qp computed obj against
+    the module-global mean matrix regardless of the passed C_bar; the migration
+    uses the passed c_bar consistently (identical on the paper instance).
+  module: jr_optlib.optimization.entropic_qp
+  signature: "rho_eta_formula / rho_eta_mc / solve_qp / solve_hungarian_qp / solve_hungarian_rn / solve_miqp_gurobi(c_bar, Sigma_c/sigma2, eta, ...) -> float | {x_opt, obj, ...}"
+  oracles: [entropic_qp.certify_entropic_assignment, entropic_qp.certify_entropic_risk_mc]
+  tests: tests/test_optimization_entropic_qp.py
+  certifies: true

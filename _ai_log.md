@@ -142,3 +142,18 @@
 **Outcome:** The 4 prior PopInt FAILs were an oracle-specification error -- they demanded exact secondary margins, which is provably infeasible (floor = 489 L1 across 98 zones; 0/98 zones can reach zero). With the corrected oracle the PopInt model-check is CERTIFIED=3 CHECKED=4 FAIL=0 (controlling AgeGender certified exact before and after repair). New methodological finding: the greedy swap leaves 40855 secondary L1, ~83x above the 489 floor; optimize_repair_zone reaches the floor exactly in all 98/98 zones (~34s) with the anchor still exact. Per-margin swap -> LP: AgeChildren 9235 -> 15, AgeFamily 4996 -> 0, AgeIncome 13894 -> 128, AgeLma 12730 -> 346. Full suite 110 tests pass.
 **Next steps:** Paper decision -- either soften the "as closely as feasible" wording or replace the greedy swap with optimize_repair_zone and report the 40855 -> 489 improvement as a result. Push jr_optlib (helpi 23) when ready.
 **Git ref:** d714e07
+
+---
+
+## Session 2026-07-02 (Claude: Pub_QP_SAA_MC entropic-risk assignment migration)
+**Agent:** Claude Opus 4.8
+**Goal:** Migrate Pub_QP_SAA_MC/code/solvers.py (entropic-risk assignment: QP / Hungarian / MIQP) into jr_optlib with a differential test vs the live paper copy and oracle wiring.
+**Files touched:**
+- src/jr_optlib/optimization/entropic_qp.py (new) -- rho_eta_formula (closed-form entropic risk), rho_eta_mc (Monte Carlo check), solve_qp (SLSQP over Birkhoff polytope, 3 warm starts), solve_hungarian_qp / solve_hungarian_rn (scipy linear_sum_assignment), solve_miqp_gurobi (Gurobi), plus build_equicorrelation_cov and sample_costs helpers. Decoupled from the paper's module-global data (mean matrix / dimension / sampler now explicit params).
+- src/jr_optlib/oracles/entropic_qp.py (new) -- certify_entropic_risk_mc (claimed value vs MC, convergence check) and certify_entropic_assignment (feasibility + objective recompute + brute-force-over-permutations exact optimum for small n).
+- src/jr_optlib/optimization/__init__.py, src/jr_optlib/oracles/__init__.py -- exports.
+- tests/test_optimization_entropic_qp.py (new) -- differential vs live paper copy (formula + seeded MC exact; solve_qp to 1e-9; Hungarian x/pi/obj exact; MIQP == Hungarian in diagonal case) + oracle tests.
+- registry/functions.yaml, registry/INDEX.md -- registered the family.
+**Outcome:** Full suite 117 tests pass (110 -> 117). Gurobi license is currently WORKING (MIQP differential ran, not skipped). Oracle note: the entropic-risk MC estimator (log-MGF) converges slowly for large eta*std, so certify_entropic_risk_mc is a mild-regime convergence check (certifies=False); the real optimality certificate is the brute-force-over-permutations oracle. Latent inconsistency fixed in migration: paper's solve_hungarian_qp computed obj against the module-global mean matrix regardless of the passed C_bar; library uses the passed c_bar.
+**Next steps:** Continue the four-project scouting order -- next is the Napsti block-coordinate fixed-point primitive (solve_coord_wise / solve_continuous, oracle = verify_with_gurobi), then the Dijkstra + SUE route-choice bundle, then Pub_ML_Entropy MH review. Push jr_optlib (helpi 23) when ready.
+**Git ref:** -

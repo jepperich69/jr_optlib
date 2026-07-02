@@ -43,6 +43,10 @@ from jr_optlib.oracles.population import (
 )
 from jr_optlib.oracles.sampling import certify_detailed_balance
 from jr_optlib.oracles.vsp import certify_vsp_heuristic_chain
+from jr_optlib.oracles.entropic_qp import (
+    certify_entropic_assignment,
+    certify_entropic_risk_mc,
+)
 
 __all__ = [
     "OracleResult",
@@ -67,4 +71,6 @@ __all__ = [
     "certify_secondary_margins_vs_floor",
     "certify_detailed_balance",
     "certify_vsp_heuristic_chain",
+    "certify_entropic_assignment",
+    "certify_entropic_risk_mc",
 ]
