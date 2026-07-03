@@ -5,6 +5,10 @@ research papers. The code equivalent of the paper "feeder" links: if a second
 paper could plausibly use a function, it lives here (vetted + tested +
 documented + indexed); paper-specific glue stays in the paper repo.
 
+**Start at [`CATALOG.md`](CATALOG.md)** — the navigable, usage-first map of
+every primitive by problem domain, with worked examples and the paper↔primitive
+feeder table. This README covers the philosophy and rules.
+
 ## Why
 
 Research code was copied per paper and drifted (the `mip_hybrid` package existed
@@ -16,8 +20,13 @@ submission-freeze rule below fixes reproducibility.
 
 ```
 src/jr_optlib/
-  transport/     vetted functions (ipf_2d, make_contingency2d, ...)
-  oracles/       independent checks: core + transport + setcover
+  transport/     IPF, Sinkhorn, exact/rounded min-cost transport
+  population/    high-dimensional IPF + integerization pipeline
+  setcover/      entropy-relaxation set cover + MIP/polish
+  optimization/  entropic-risk QP/assignment, dual ascent, discrete choice, DP, NLP, routing
+  sampling/      MCMC, simulated annealing, SSKP delta-update MH, Q-learning
+  vsp/           vehicle-scheduling Metropolis + greedy
+  oracles/       independent checks: core + one module per domain
   harness.py     turns oracle results into a coverage map
 registry/        the index: functions.yaml, instances.yaml, references.yaml, SCHEMA.md
 oracle_bank/     benchmark instances with known optima + reference impls + provenance
@@ -61,17 +70,21 @@ how a shared library and a standalone-reproducible paper coexist.
 
 ```
 pip install -e .            # runtime (numpy only)
-pip install -e .[test]      # + pytest, scipy for the oracle test suite
-pytest                      # 16 oracle-backed tests
+pip install -e .[test]      # + pytest, scipy, pulp, gurobipy, pandas, numba
+pytest                      # 139 oracle-backed tests
 python oracle_bank/demo_scp41.py   # end-to-end harness on a real OR-Library instance
 ```
 
-Optional extras: `.[oracles-full]` adds POT + networkx for transport/MCF
-reference oracles.
+Optional extras (`pyproject.toml`): `oracles` (scipy), `transport-lp` (pulp),
+`setcover-gurobi` (gurobipy), `population` (pandas), `fast-sampling` (numba),
+`oracles-full` (POT + networkx). A paper importing one function never pulls the
+whole stack.
 
 ## Status
 
-First slice (2026-07-02): `ipf_2d` vetted and certified; set-cover oracles +
-scp41 wired end-to-end. Next: migrate the transport rounding routines and the
-`mip_hybrid` solver, one function at a time, using library-vs-old-copy
-comparison as the migration test.
+41 vetted primitives across transport, population synthesis, set cover,
+entropic-risk assignment, sampling (MCMC/SSKP/RL), VSP, discrete choice, DP,
+NLP and routing — each certified by at least one oracle; 139 oracle-backed
+tests pass. Fed by 8 papers (see the feeder map in `CATALOG.md`). Growth is
+demand-driven: primitives are extracted, one at a time with an oracle, when a
+paper needs them.

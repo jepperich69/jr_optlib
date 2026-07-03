@@ -42,6 +42,15 @@ Schema: `SCHEMA.md`.
 | `optimization.solve_qp` | convex QP over Birkhoff polytope (SLSQP, 3 starts) | certify_entropic_assignment (feasible+recompute+relaxation bound) | no | vetted |
 | `optimization.solve_hungarian_qp` / `solve_hungarian_rn` | exact assignment (independent / risk-neutral) via `linear_sum_assignment` | certify_entropic_assignment (brute-force optimum, small n) | yes | vetted |
 | `optimization.solve_miqp_gurobi` | correlated-case entropic-risk MIQP (Gurobi) | certify_entropic_assignment (brute-force optimum, small n) | yes | vetted |
+| `optimization.compute_mnl_probabilities` | MNL choice probabilities (stable, availability mask) | certify_mnl | no | vetted |
+| `optimization.compute_logsum` | expected max utility (logsum) of a choice set | certify_mnl | no | vetted |
+| `optimization.compute_nested_logit_probabilities` | two-level nested logit probabilities | certify_nested_logit | no | vetted |
+| `optimization.compute_route_choice_shares` | SUE car+transit route-choice shares (direct + one-transfer) | -- | no | vetted |
+| `optimization.backward_induction_solver` | finite-horizon stochastic DP (backward induction) | certify_dp_vs_brute_force | yes | vetted |
+| `optimization.contract_transitions` | DP expectation step (tensordot over exogenous transitions) | certify_transition_contraction | yes | vetted |
+| `optimization.solve_coord_wise` | coordinate-wise NLP block solve | verify_with_gurobi | no | vetted |
+| `optimization.dijkstra_manhattan` | min Manhattan distance to nearest station per mode | -- | no | vetted |
+| `sampling.run_q_learning_episode` | tabular Q-learning episode (risk-neutral / exponential) | certify_q_learning_vs_dp | no | vetted |
 
 ## Known-answer instances (`instances.yaml`)
 
