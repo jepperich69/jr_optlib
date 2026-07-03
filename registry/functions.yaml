@@ -715,3 +715,27 @@
   oracles: [rl.certify_q_learning_vs_dp]
   tests: tests/test_sampling_rl.py
   certifies: false
+
+- id: sampling.sskp_mh_chain
+  name: SSKP delta-update MH chain
+  kind: function
+  summary: Metropolis-Hastings on a binary selection for the SSKP chance-constrained objective; O(1) sufficient-statistic updates per single-flip step, optional numba JIT.
+  tags: [sampling, mcmc, metropolis-hastings, chance-constraint, sskp, delta-update, numba]
+  status: vetted
+  source: Pub_SAA_PMIP_MC/code/java_backend/.../SamplerCli.java::sskpMhChain (formulation-preserving extraction; Java host not ported)
+  added: 2026-07-03
+  provenance: >
+    Certified by delta_invariant: the incrementally maintained sufficient
+    statistics (muX, sigmaX2, revX) and objective curF equal an independent
+    O(k) recompute of the final selection, so the O(1) delta bookkeeping never
+    drifts. The chance-constraint penalty is cross-checked against an
+    independent scipy.stats.norm partial expectation (penalty_reference), and
+    the chain is shown to sample the correct Boltzmann law on a small enumerable
+    instance (test_chain_matches_boltzmann_expectation). The optional numba
+    backend is validated bit-for-bit against the pure-Python reference.
+  module: jr_optlib.sampling.sskp_mh
+  signature: "sskp_mh_chain(r, mu, sigma, c, q, beta, t_burn, t_sample, thin=1, seed=0, backend='auto', x0=None) -> SskpMhResult"
+  oracles: [sskp.certify_sskp_chain, sskp.delta_invariant, sskp.penalty_reference]
+  tests: tests/test_sskp_mh.py
+  certifies: true
+  extras: [fast-sampling]

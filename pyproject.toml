@@ -30,6 +30,11 @@ setcover-gurobi = [
 population = [
     "pandas>=2.0",
 ]
+# Optional JIT accelerator for the sequential MH samplers (sskp_mh_chain).
+# Pure-Python fallback runs without it; results are bit-identical either way.
+fast-sampling = [
+    "numba>=0.60",
+]
 oracles-full = [
     "scipy>=1.10",
     "pot>=0.9",        # optimal-transport reference impls (Sinkhorn, EMD)
@@ -42,6 +47,7 @@ test = [
     "gurobipy>=13.0",
     "pandas>=2.0",
     "pyyaml>=6.0",
+    "numba>=0.60",
 ]
 
 [tool.setuptools.packages.find]

@@ -36,6 +36,7 @@ Schema: `SCHEMA.md`.
 | `vsp.randomized_greedy_solution` | VSP randomized greedy warm start | -- | no | vetted |
 | `sampling.simulated_annealing` | generic geometric SA optimizer | -- | no | vetted |
 | `sampling.ladder_burn_in` | MCMC temperature ladder burn-in | -- | no | vetted |
+| `sampling.sskp_mh_chain` | SSKP chance-constrained MH, O(1) delta updates (opt. numba) | certify_sskp_chain (delta invariant + penalty ref) | yes | vetted |
 | `optimization.subgradient_dual_ascent` | Generic subgradient dual ascent | -- | no | vetted |
 | `optimization.rho_eta_formula` / `rho_eta_mc` | entropic (exponential) risk for Gaussian costs: closed form + Monte Carlo | certify_entropic_risk_mc (formula vs MC) | yes | vetted |
 | `optimization.solve_qp` | convex QP over Birkhoff polytope (SLSQP, 3 starts) | certify_entropic_assignment (feasible+recompute+relaxation bound) | no | vetted |
