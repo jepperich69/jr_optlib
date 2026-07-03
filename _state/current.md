@@ -1,6 +1,6 @@
-# State -- 2026-07-02
-**Phase:** Active development -- library migration (transport + set-cover + population + sampling + optimization families vetted)
-**Last session:** Migrated Pub_QP_SAA_MC entropic-risk assignment solvers (QP/Hungarian/MIQP + closed-form-vs-MC and brute-force-optimum oracles); also fixed the PopInt secondary-margin oracle to the paper's contract and added optimize_repair_zone as a proven floor/diagnostic (not a repair method -- it collapses overlap).
-**Next:** (1) Napsti block-coordinate fixed-point primitive (solve_coord_wise / solve_continuous; oracle = verify_with_gurobi); (2) Dijkstra + SUE route-choice bundle (Napsti greenfield + Pub_CongestionPMIP compute_route_choice_shares/gradient); (3) Pub_ML_Entropy MH review vs existing sampling module; (4) push jr_optlib to GitHub (helpi 23) when desired; (5) gurobi license currently WORKING.
-**Git ref:** 0c2f9d7
+# State -- 2026-07-03
+**Phase:** Active development -- library mature (41 vetted primitives, 139 tests); now demand-driven growth + documentation
+**Last session:** Sinkhorn reconstruction sped up bit-identically and pinned into Pub_MIPEntropy_MPC; extracted the SSKP delta-update MH sampler as a vetted primitive (oracle + optional numba ~51x); wrote CATALOG.md and refreshed README/INDEX; pushed jr_optlib to GitHub (origin/main @ 76f36ec) so the paper pin resolves.
+**Next:** (1) set-cover MH chain (scMhChain, same Pub_SAA_PMIP_MC Java backend) -- deferred, extract when a paper needs it; (2) optional generator to emit INDEX.md/CATALOG tables from functions.yaml (drift recurred this session); (3) standing workflow recorded: check jr_optlib before any new optimization/sampling code, reuse or build-and-integrate.
+**Git ref:** 76f36ec
 **Agent:** Claude Opus 4.8

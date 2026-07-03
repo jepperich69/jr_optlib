@@ -14,21 +14,7 @@
 - **2026-07-02 (handoff prep for Codex)** (Claude): User is low on tokens and wants to continue the jr_optlib migration... -> jr_optlib now has an AGENTS.md so a Codex/Gemini session opens with full context. Verdi...
 - **2026-07-02 (Gemini: VSP heuristic integration)** (Gemini CLI (Gemini 3.1 Pro (High))): Migrate the heuristic VSP (Vehicle Scheduling) chains from Pub_PMIP... -> The Metropolis feasible-state search for vehicle scheduling has been migrated, proven b...
 - **2026-07-02 (Gemini: SA logic extraction)** (Gemini CLI (Gemini 3.1 Pro (High))): Extract the geometric Simulated Annealing optimization logic from P... -> The generic SA loop logic is now safely centralized in mcmc.py. VSP code is simplified ...
-
----
-
-## Session 2026-07-02 (Gemini: Ladder Burn-in extraction)
-**Agent:** Gemini CLI (Gemini 3.1 Pro (High))
-**Goal:** Migrate the Pub_PMIP_AOR temperature-ladder MCMC warmup logic as a separate ladder_burn_in primitive.
-**Files touched:**
-- src/jr_optlib/sampling/mcmc.py -- added ladder_burn_in generic driver (takes a temperature schedule and proposal function, retaining the best state found).
-- src/jr_optlib/sampling/setcover_mcmc.py -- integrated ladder_burn_in directly into mh_exact_setcover by adding an optional urn_schedule argument, allowing the exact detailed-balance setcover chain to seamlessly run the AOR warmup sequence before sampling.
-- src/jr_optlib/sampling/__init__.py -- exported ladder_burn_in.
-- 	ests/test_sampling_mcmc.py -- added a pure 1D random-walk test to prove the ladder_burn_in correctly descends the energy landscape across the temperature schedule.
-- egistry/functions.yaml, INDEX.md -- registered sampling.ladder_burn_in.
-**Outcome:** The AOR temperature-ladder heuristic is now a fully generic jr_optlib primitive. mh_exact_setcover now encapsulates the entire AOR inference pipeline (burn-in + exact sampling) purely within jr_optlib. 
-**Next steps:** Push jr_optlib to GitHub.
-**Git ref:**
+- **2026-07-02 (Gemini: Ladder Burn-in extraction)** (Gemini CLI (Gemini 3.1 Pro (High))): Migrate the Pub_PMIP_AOR temperature-ladder MCMC warmup logic as a ... -> The AOR temperature-ladder heuristic is now a fully generic jr_optlib primitive. mh_exa...
 
 ---
 
@@ -73,3 +59,23 @@
 **Outcome:** Full suite 117 tests pass (110 -> 117). Gurobi license is currently WORKING (MIQP differential ran, not skipped). Oracle note: the entropic-risk MC estimator (log-MGF) converges slowly for large eta*std, so certify_entropic_risk_mc is a mild-regime convergence check (certifies=False); the real optimality certificate is the brute-force-over-permutations oracle. Latent inconsistency fixed in migration: paper's solve_hungarian_qp computed obj against the module-global mean matrix regardless of the passed C_bar; library uses the passed c_bar.
 **Next steps:** Continue the four-project scouting order -- next is the Napsti block-coordinate fixed-point primitive (solve_coord_wise / solve_continuous, oracle = verify_with_gurobi), then the Dijkstra + SUE route-choice bundle, then Pub_ML_Entropy MH review. Push jr_optlib (helpi 23) when ready.
 **Git ref:** 391794e
+
+---
+
+## Session 2026-07-03 (Claude: perf audit, SSKP extraction, catalog, GitHub push)
+**Agent:** Claude Opus 4.8
+**Goal:** Audit jr_optlib for low-hanging numerical/vectorization wins before papers pin; extract the reusable delta-update sampler "gold"; write down everything the library contains (usage + problem map).
+**Files touched:**
+- `src/jr_optlib/transport/sinkhorn.py` -- replaced `X = diag(u) @ K @ diag(v)` with the broadcast outer rescaling `u[:,None]*K*v[None,:]` in both sinkhorn_balanced and _uv; ~10-30x faster on the reconstruction step, bit-for-bit identical (matmul only adds exact zeros), verified by the 18 migration cases.
+- `src/jr_optlib/sampling/sskp_mh.py` (new) -- SSKP chance-constrained delta-update MH chain: O(1) sufficient-statistic update per single-flip step; optional numba JIT (~51x over pure Python, bit-identical); pure-Python fallback. Formulation extracted from Pub_SAA_PMIP_MC's Java backend (JVM host NOT ported).
+- `src/jr_optlib/oracles/sskp.py` (new) -- delta_invariant (maintained stats/objective == full O(k) recompute; certificate) + penalty_reference (A&S penalty vs scipy partial expectation) + certify_sskp_chain.
+- `tests/test_sskp_mh.py` (new) -- delta-invariant certify, python-vs-numba bit-identity, Boltzmann-distribution match, corrupted-stats catch.
+- `src/jr_optlib/sampling/__init__.py`, `src/jr_optlib/oracles/__init__.py` -- exports.
+- `registry/functions.yaml`, `registry/INDEX.md` -- registered sampling.sskp_mh_chain; also re-synced INDEX (had drifted: missing all choice/DP/RL/NLP/routing entries).
+- `pyproject.toml` -- added `fast-sampling` (numba) optional extra + numba in test deps.
+- `CATALOG.md` (new) -- problem-oriented, usage-first map of all 41 primitives, with pipelines, worked examples, and the paper<->primitive feeder table.
+- `README.md` -- refreshed stale bits (16->139 tests, layout, status).
+- (outside repo) `Publikationer/Pub_MIPEntropy_MPC/code/requirements.txt` -- pinned `jr_optlib @ git+...@3ea1d4a` so the paper's Sinkhorn/IPF results freeze to this commit.
+**Outcome:** Library audit: already well-vectorized; the one real win was the Sinkhorn reconstruction (bit-identical, now pinned into Pub_MIPEntropy_MPC -- the paper's repro already imports jr_optlib live, so the pin was the durable fix). SSKP delta-update sampler is now a vetted primitive (JVM baggage left behind; numba gives JVM-class speed in-process). CATALOG.md now captures the "gold" the registry YAML couldn't. Pushed all three commits to GitHub (origin/main @ 76f36ec); pinned commit 3ea1d4a confirmed reachable so the pin resolves. 139 tests pass.
+**Next steps:** (1) set-cover MH chain (scMhChain in the same Pub_SAA_PMIP_MC Java backend) -- deferred, same delta-update pattern, extract when a paper needs it; (2) optional: a generator emitting INDEX.md/CATALOG tables from functions.yaml to prevent doc drift (drift recurred this session); (3) standing workflow now recorded in memory -- check jr_optlib before any new optimization/sampling code, reuse or build-and-integrate.
+**Git ref:** 76f36ec

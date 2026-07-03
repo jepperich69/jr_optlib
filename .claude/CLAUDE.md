@@ -18,7 +18,9 @@ metamorphic, known-answer benchmarks). The `harness` turns oracle results into a
 
 ## Key files
 
+- `CATALOG.md` -- **entry point.** Problem-oriented, usage-first map of all primitives with worked examples, pipelines, and the paper<->primitive feeder table. `registry/functions.yaml` stays the machine source of truth; `CATALOG.md` + `INDEX.md` are hand-synced views (they drift -- re-check when adding entries).
 - `src/jr_optlib/transport/ipf.py` -- first vetted function (`ipf_2d`), extracted numerics-preserving from Pub_MIPEntropy_MPC.
+- `src/jr_optlib/sampling/` -- `mcmc` (generic MH/SA/ladder), `sskp_mh` (SSKP chance-constrained delta-update MH, optional numba), `rl` (Q-learning).
 - `src/jr_optlib/oracles/` -- `core` (generic oracles), `transport` (IPF certificate), `setcover`, `population` (margin + secondary-floor), `entropic_qp` (formula-vs-MC + brute-force-optimum).
 - `src/jr_optlib/optimization/` -- `lagrangian` (subgradient dual ascent), `entropic_qp` (QP/Hungarian/MIQP entropic-risk assignment; uses scipy.optimize and, for MIQP, gurobipy).
 - `src/jr_optlib/harness.py` -- coverage-map builder (the deliverable).
@@ -28,7 +30,7 @@ metamorphic, known-answer benchmarks). The `harness` turns oracle results into a
 
 ## Standing constraints
 
-- **numpy-only runtime.** Oracles/tests may use scipy; POT/networkx are optional extras. Keep the runtime dep set minimal so a paper importing one function doesn't pull the whole validation stack.
+- **numpy-only runtime.** Oracles/tests may use scipy; POT/networkx/numba are optional extras. Keep the runtime dep set minimal so a paper importing one function doesn't pull the whole validation stack. Accelerators (e.g. numba for `sskp_mh_chain`, the `fast-sampling` extra) must be optional with a bit-identical pure-Python fallback.
 - **Numerics-preserving extraction.** When migrating a function from a paper, preserve its exact behavior (even quirks like `ipf_2d` returning `(X, elapsed)`) so migration is verified by library-vs-old-copy equality.
 - **No vetted entry without an oracle** (see `registry/SCHEMA.md`).
 - **Reproducibility:** develop against the live library; at submission pin the commit SHA and vendor a snapshot into the paper's repro package.
