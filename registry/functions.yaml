@@ -359,6 +359,41 @@
   tests: tests/test_population_hard_ipf.py
   certifies: true
 
+- id: population.entropy_curvature
+  name: Entropy value-function curvature (projection + information matrix)
+  kind: function-family
+  summary: >
+    KL I-projection for a general aggregation matrix and the curvature of its
+    value function. margin_information_matrix builds M = A diag(x) A^T (the
+    Fisher information / covariance of the margins under the fitted table);
+    entropic_projection solves min D_KL(x||x0) s.t. A x = b by dual Newton on
+    x = x0 exp(A^T lambda), generalising the 2D transport.ipf_2d to arbitrary
+    margin structures. The inverse information matrix pinv(M) is the KL price
+    curvature used by priced integerization (Pub_PopInt_Part2, Prop 2).
+  tags: [population-synthesis, entropy, ipf, furness, kl-projection, curvature, shadow-price, information-matrix, popint]
+  status: vetted
+  source: Pub_PopInt_Part2_TBA/code/delta_priced_swap.py (closed-form price; primitive extracted and generalised)
+  added: 2026-07-04
+  provenance: >
+    certify_margin_curvature certifies H = pinv(A diag(x) A^T) = grad^2_b Phi(b)
+    independently of the closed form: (1) an exact pseudo-inverse-on-range
+    certificate H M d = d for feasible margin moves d in range(A); (2) PSD of H;
+    (3) a finite-difference check of the value-function Hessian along feasible
+    swap directions, re-solving the projection from scratch (defining property
+    A x = b, residual-gated) so agreement is a genuine test of Prop 2, not a
+    replay of the algebra. entropic_projection is certified by
+    certify_entropic_projection (matching margins + exponential-family scaling
+    form -- the two properties that determine the unique I-projection). A
+    negative test confirms the finite-difference identity rejects the common
+    wrong price pinv(A A^T) (dropped diag(x)). Run on all 98 Danish
+    municipalities: 98/98 CERTIFIED, 0 fail, worst finite-difference rel. error
+    1.7e-3 (Pub_PopInt_Part2_TBA/code/oracle_curvature.py).
+  module: jr_optlib.population.curvature
+  signature: "margin_information_matrix(x, A) -> M ; entropic_projection(x0, A, b_target, max_iter=100, tol=1e-12, ridge=0.0, precond=None) -> (x, res)"
+  oracles: [population.certify_margin_curvature, population.certify_entropic_projection]
+  tests: tests/test_population_curvature.py
+  certifies: true
+
 - id: population.optimize_repair_zone
   name: Optimal population repair (min secondary L1)
   kind: function

@@ -38,6 +38,8 @@ from jr_optlib.oracles.setcover import (
     setcover_cost,
 )
 from jr_optlib.oracles.population import (
+    certify_entropic_projection,
+    certify_margin_curvature,
     certify_population_margins,
     certify_secondary_margins_vs_floor,
 )
@@ -81,6 +83,8 @@ __all__ = [
     "certify_setcover_solution",
     "certify_population_margins",
     "certify_secondary_margins_vs_floor",
+    "certify_entropic_projection",
+    "certify_margin_curvature",
     "certify_detailed_balance",
     "certify_vsp_heuristic_chain",
     "certify_entropic_assignment",

@@ -6,6 +6,10 @@ from __future__ import annotations
 import numpy as np
 
 from jr_optlib.oracles.core import OracleResult
+from jr_optlib.population.curvature import (
+    entropic_projection,
+    margin_information_matrix,
+)
 
 
 def certify_population_margins(df, constraints, weight_col="x", tol: float = 1e-6, rel_tol: float = 0.0):
@@ -180,5 +184,200 @@ def certify_secondary_margins_vs_floor(
         "zones_at_floor": n_at_floor,
         "n_zones": len(all_zones),
         "worst_zone": worst,
+    }
+    return results, summary
+
+
+# --------------------------------------------------------------------------
+# Entropy-projection curvature (Pub_PopInt_Part2)
+# --------------------------------------------------------------------------
+
+def _kl(p: np.ndarray, q: np.ndarray) -> float:
+    """Unnormalised KL / I-divergence sum_k p_k log(p_k/q_k) - p_k + q_k.
+
+    Zero terms (p_k == 0) contribute 0; q_k must be > 0 wherever p_k > 0.
+    The linear terms make it the Bregman divergence of x log x, so it is >= 0
+    and 0 iff p == q, which is what the curvature finite differences need.
+    """
+    p = np.asarray(p, dtype=float)
+    q = np.asarray(q, dtype=float)
+    mask = p > 0
+    out = float(np.sum(q - p))  # -p + q over all cells
+    out += float(np.sum(p[mask] * np.log(p[mask] / q[mask])))
+    return out
+
+
+def certify_entropic_projection(x0, A, x, b, tol: float = 1e-8):
+    """Certify that ``x`` is the KL I-projection of ``x0`` onto ``{A x = b}``.
+
+    Two properties jointly determine the unique I-projection (same logic as the
+    2D IPF certificate): the fitted margins match the target (marginal residual),
+    and the fit has exponential-family / scaling form ``x = x0 * exp(A^T λ)``,
+    i.e. ``log(x/x0)`` lies in the row space of ``A``. The second is checked by
+    least-squares fitting ``λ`` to ``log(x/x0)`` on the shared support and
+    measuring the residual off ``range(A^T)``.
+    """
+    x0 = np.asarray(x0, dtype=float)
+    A = np.asarray(A, dtype=float)
+    x = np.asarray(x, dtype=float)
+    b = np.asarray(b, dtype=float)
+
+    marg = float(np.max(np.abs(A @ x - b))) if b.size else 0.0
+
+    support = (x0 > 0) & (x > 0)
+    logr = np.log(x[support] / x0[support])
+    At = A.T[support]  # (support, m)
+    lam, *_ = np.linalg.lstsq(At, logr, rcond=None)
+    scaling = float(np.max(np.abs(At @ lam - logr))) if logr.size else 0.0
+
+    residual = max(marg, scaling)
+    passed = residual <= tol
+    return OracleResult(
+        name="entropic_projection",
+        passed=passed,
+        residual=residual,
+        tol=tol,
+        certifies=passed,
+        detail=f"marginal_residual={marg:.3e} scaling_form_residual={scaling:.3e}",
+    )
+
+
+def certify_margin_curvature(
+    x,
+    A,
+    n_directions: int = 48,
+    h: float = 0.25,
+    rel_tol: float = 1e-2,
+    solve_tol: float = 1e-12,
+    seed: int = 0,
+    directions=None,
+):
+    """Certify ``H = [A diag(x) A^T]^{-1} = ∇²_b Φ(b)`` for the entropy value function.
+
+    ``Φ(b) = min_{A y = b} D_KL(y || x0)`` is the KL cost of moving the fitted
+    margins to ``b``. Proposition 2 of Pub_PopInt_Part2 states its Hessian is the
+    inverse margin information matrix ``H = pinv(A diag(x) A^T)``. This oracle
+    verifies that identity *independently* of the closed form, using only the
+    fitted table ``x`` and ``A``:
+
+    1. **pinv-on-range certificate** (certifies). Feasible margin moves live in
+       ``range(A)``. On that subspace ``H`` must be the exact inverse of
+       ``M = A diag(x) A^T``: ``H M d = d`` for every feasible ``d``. This is an
+       exact algebraic certificate (no finite differences) that ``H`` inverts
+       ``M`` where it matters.
+    2. **PSD check** (checked). ``M`` is a covariance, so ``H`` is PSD; a negative
+       eigenvalue would signal a broken price.
+    3. **finite-difference Hessian** (checked). Along each feasible swap
+       direction ``d = A[:,j] - A[:,i]`` the analytic curvature ``d^T H d`` is
+       compared to a central second difference of the *re-solved* value
+       function. Re-projecting from seed ``x`` to margins ``b ± h d`` recovers
+       ``x(b ± h d)`` exactly (the I-projection stays in the exponential family),
+       and ``Ψ(b') = D_KL(x(b') || x)`` differs from ``Φ`` only by a linear term,
+       so ``∇²Ψ = ∇²Φ``. With ``Ψ(b) = 0`` the second difference is
+       ``(Ψ(b+hd) + Ψ(b-hd)) / h²``. Because the re-solve is driven by the
+       defining property ``A x = b'`` (residual-gated), not by the curvature
+       formula, agreement is a genuine check on Proposition 2.
+
+    Returns ``(results, summary)``. The combined verdict is CERTIFIED when the
+    pinv-on-range identity holds and no check fails; the finite-difference test
+    confirms (CHECKED) that the inverse information matrix is the value-function
+    curvature. A projection that fails to converge FAILs the oracle.
+    """
+    x = np.asarray(x, dtype=float)
+    A = np.asarray(A, dtype=float)
+    m, K = A.shape
+
+    M = margin_information_matrix(x, A)
+    H = np.linalg.pinv(M, rcond=1e-12)
+    b = A @ x
+
+    # ---- (1) exact pseudo-inverse-on-range certificate + (3) directions ----
+    rng = np.random.default_rng(seed)
+    pos = np.flatnonzero(x > 0)
+    if directions is None:
+        dirs = []
+        attempts = 0
+        max_attempts = 40 * n_directions + 50
+        while len(dirs) < n_directions and attempts < max_attempts and len(pos) >= 2:
+            i, j = rng.choice(pos, size=2, replace=False)
+            d = A[:, j] - A[:, i]
+            if np.any(d != 0.0):
+                dirs.append(d)
+            attempts += 1
+    else:
+        dirs = [np.asarray(d, dtype=float) for d in directions]
+
+    HM = H @ M
+    max_pinv_res = 0.0
+    for d in dirs:
+        # d = A(e_j - e_i) is in range(A); H must invert M on it: H M d == d.
+        max_pinv_res = max(max_pinv_res, float(np.max(np.abs(HM @ d - d))))
+
+    # ---- (2) PSD of the curvature ----
+    eigs = np.linalg.eigvalsh(0.5 * (H + H.T))
+    min_eig = float(eigs.min())
+    # scale tolerance to the spectrum
+    psd_tol = 1e-8 * max(1.0, float(np.abs(eigs).max()))
+
+    # ---- (3) finite-difference Hessian along feasible directions ----
+    precond = H  # fixed quasi-Newton preconditioner; solves are residual-gated
+    worst_rel = 0.0
+    worst_solve_res = 0.0
+    n_used = 0
+    sum_rel = 0.0
+    for d in dirs:
+        q_cf = float(d @ H @ d)
+        if q_cf <= 1e-14:
+            continue  # direction with negligible curvature carries no signal
+        xp, rp = entropic_projection(x, A, b + h * d, tol=solve_tol, precond=precond)
+        xm, rm = entropic_projection(x, A, b - h * d, tol=solve_tol, precond=precond)
+        worst_solve_res = max(worst_solve_res, rp, rm)
+        q_fd = (_kl(xp, x) + _kl(xm, x)) / (h * h)
+        rel = abs(q_fd - q_cf) / max(abs(q_cf), 1e-14)
+        worst_rel = max(worst_rel, rel)
+        sum_rel += rel
+        n_used += 1
+
+    mean_rel = sum_rel / n_used if n_used else 0.0
+    solves_ok = worst_solve_res <= 1e-6
+
+    results = [
+        OracleResult(
+            name="margin_curvature_pinv_identity",
+            passed=max_pinv_res <= 1e-8,
+            residual=max_pinv_res,
+            tol=1e-8,
+            certifies=(max_pinv_res <= 1e-8),
+            detail=f"max|H M d - d|={max_pinv_res:.3e} over {len(dirs)} feasible dirs",
+        ),
+        OracleResult(
+            name="margin_curvature_psd",
+            passed=min_eig >= -psd_tol,
+            residual=max(-min_eig, 0.0),
+            tol=psd_tol,
+            certifies=False,
+            detail=f"min_eig(H)={min_eig:.3e}",
+        ),
+        OracleResult(
+            name="margin_curvature_finite_diff",
+            passed=(worst_rel <= rel_tol) and solves_ok,
+            residual=worst_rel,
+            tol=rel_tol,
+            certifies=False,
+            detail=(
+                f"max_rel_err={worst_rel:.3e} mean_rel_err={mean_rel:.3e} "
+                f"dirs={n_used} h={h:g} worst_solve_res={worst_solve_res:.1e}"
+                + ("" if solves_ok else " [PROJECTION DID NOT CONVERGE]")
+            ),
+        ),
+    ]
+    summary = {
+        "M_shape": M.shape,
+        "min_eig_H": min_eig,
+        "max_pinv_residual": max_pinv_res,
+        "max_rel_err": worst_rel,
+        "mean_rel_err": mean_rel,
+        "n_directions": n_used,
+        "worst_solve_residual": worst_solve_res,
     }
     return results, summary

@@ -28,6 +28,7 @@ Schema: `SCHEMA.md`.
 | `setcover.polish_solution` | restricted Gurobi polish for set cover | certify_setcover_solution (CHECKED) | no | vetted |
 | `setcover.solve_mip` | Gurobi set-cover MIP solve with bound/gap | gap_certificate / certify_setcover_solution | yes | vetted |
 | `population.HardIPF` | high-dimensional IPF over long population tables | certify_population_margins | yes | vetted |
+| `population.entropy_curvature` | general-A KL projection + margin information matrix `A diag(x) Aᵀ`; its pinv is the KL price curvature | certify_margin_curvature (pinv-on-range certificate + PSD + finite-diff Hessian), certify_entropic_projection | yes | vetted |
 | `population.swap_repair_zone` | anchor-preserving population integer swap repair | certify_population_margins (controlling, CHECKED) + certify_secondary_margins_vs_floor (secondary vs LP floor) | no | vetted |
 | `population.optimize_repair_zone` | floor bound / diagnostic: min secondary-margin L1 with anchor pinned exactly (NOT a drop-in repair -- collapses fractional overlap) | certify_secondary_margins_vs_floor (sits at floor) + certify_population_margins (anchor exact) | yes | vetted |
 | `population.step1_split` | deterministic floor split for population integerization | certify_population_margins (pipeline precondition) | no | vetted |
