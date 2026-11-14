@@ -3,6 +3,7 @@ from jr_optlib.optimization.lagrangian import subgradient_dual_ascent
 from jr_optlib.optimization.nlp import solve_coord_wise
 from jr_optlib.optimization.routing import dijkstra_manhattan, compute_route_choice_shares
 from jr_optlib.optimization.entropic_qp import (
+    gaussian_entropic_costs,
     build_equicorrelation_cov,
     rho_eta_formula,
     rho_eta_mc,
@@ -29,6 +30,7 @@ __all__ = [
 ]
 from jr_optlib.optimization.dp import backward_induction_solver, contract_transitions
 from jr_optlib.optimization.choice import compute_mnl_probabilities, compute_logsum, compute_nested_logit_probabilities
+from jr_optlib.optimization.recursive_logit import RecursiveLogitResult, recursive_logit_assignment
 
 __all__.extend([
     'backward_induction_solver',

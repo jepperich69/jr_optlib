@@ -14,12 +14,28 @@ import pytest
 
 from jr_optlib.optimization import (
     build_equicorrelation_cov,
+    gaussian_entropic_costs,
     rho_eta_formula,
     rho_eta_mc,
     solve_hungarian_qp,
     solve_hungarian_rn,
     solve_qp,
 )
+
+
+def test_gaussian_link_costs_zero_limit_and_route_aggregation():
+    mean = np.array([2.0, 3.0, 5.0])
+    variance = np.array([0.25, 1.0, 4.0])
+    assert np.array_equal(gaussian_entropic_costs(mean, variance, 0.0), mean)
+    eta = 0.4
+    transformed = gaussian_entropic_costs(mean, variance, eta)
+    x = np.array([1.0, 0.0, 1.0])
+    sigma = np.diag(variance)
+    assert np.isclose(
+        transformed @ x,
+        rho_eta_formula(x, mean, sigma, eta),
+        atol=1e-12,
+    )
 from jr_optlib.oracles import (
     Verdict,
     certify_entropic_assignment,

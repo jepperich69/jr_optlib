@@ -65,6 +65,23 @@ def sample_costs(c_bar: np.ndarray, Sigma_c: np.ndarray, S: int,
 # Entropic risk: closed form (Theorem 1) and Monte Carlo estimate
 # ---------------------------------------------------------------------------
 
+def gaussian_entropic_costs(mean: np.ndarray, variance: np.ndarray,
+                            eta: float) -> np.ndarray:
+    """Independent-Gaussian certainty-equivalent costs, element by element.
+
+    For ``C_a ~ N(mean_a, variance_a)``, return
+    ``mean_a + (eta/2) variance_a``.  Additivity applies only when the costs
+    accumulated by a decision are independent; covariance requires the full
+    quadratic form in :func:`rho_eta_formula` or an augmented state.
+    """
+    mean = np.asarray(mean, dtype=float)
+    variance = np.asarray(variance, dtype=float)
+    if mean.shape != variance.shape:
+        raise ValueError("mean and variance must have the same shape")
+    if eta < 0 or np.any(variance < 0):
+        raise ValueError("eta and variance must be nonnegative")
+    return mean + 0.5 * eta * variance
+
 def rho_eta_formula(x_vec: np.ndarray, c_bar: np.ndarray,
                     Sigma_c: np.ndarray, eta: float) -> float:
     """Closed-form entropic risk ``c_bar^T x + (eta/2) x^T Sigma_c x``."""

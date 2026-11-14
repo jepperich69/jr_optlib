@@ -30,7 +30,7 @@
 <body>
 
 <h1>Handover Document &mdash; jr_optlib</h1>
-<div class="meta">Generated: 2026-07-03 17:33 &nbsp;|&nbsp; Source: <code style="display:inline;padding:2px 6px">_ai_log.md</code> &nbsp;|&nbsp; Sidecar: <code style="display:inline;padding:2px 6px">_handover.json</code></div>
+<div class="meta">Generated: 2026-09-23 22:37 &nbsp;|&nbsp; Source: <code style="display:inline;padding:2px 6px">_ai_log.md</code> &nbsp;|&nbsp; Sidecar: <code style="display:inline;padding:2px 6px">_handover.json</code></div>
 
 <!-- ============================================================ -->
 <!-- AGENT INSTRUCTIONS                                            -->
@@ -40,7 +40,7 @@
   <p>This document records the research work done on <strong>jr_optlib</strong>.
   The <strong>editable source of truth</strong> is <code style="display:inline;padding:2px 4px">_ai_log.md</code> in the project root.
   The HTML is regenerated from it by running:</p>
-  <pre>.\AI_auto\generate_handover.ps1 -Project jr_optlib</pre>
+  <pre>.\AI_auto\scripts\generate_handover.ps1 -Project jr_optlib</pre>
   <p><strong>To add a session entry:</strong> append a new <code style="display:inline;padding:2px 4px">## Session YYYY-MM-DD</code> block
   to the markdown below (in the textarea), following the existing format.
   Hand the updated markdown back to the user to paste into <code style="display:inline;padding:2px 4px">_ai_log.md</code>.</p>
@@ -50,7 +50,7 @@
 **Agent:** [Claude / GPT-4o / etc.]
 **Goal:** [what was worked on]
 **Files touched:**
-- \code/file.py\ â€” [description of change]
+- \code/file.py\ -- [description of change]
 **Outcome:** [what was accomplished]
 **Next steps:** [what remains open]
 **Git ref:** [short commit hash(es), if applicable]</pre>
@@ -62,24 +62,17 @@
 <div class="latest-session">
   <div class="session-status ok">Complete</div>
   <h2>Latest Session Snapshot</h2>
-  <p><strong>Session:</strong> 2026-07-03 (Claude: perf audit, SSKP extraction, catalog, GitHub push)</p>
-  <p><strong>Agent:</strong> Claude Opus 4.8</p>
-  <p><strong>Goal:</strong> Audit jr_optlib for low-hanging numerical/vectorization wins before papers pin; extract the reusable delta-update sampler &quot;gold&quot;; write down everything the library contains (usage + problem map).</p>
-  <p><strong>Outcome:</strong> Library audit: already well-vectorized; the one real win was the Sinkhorn reconstruction (bit-identical, now pinned into Pub_MIPEntropy_MPC -- the paper&#39;s repro already imports jr_optlib live, so the pin was the durable fix). SSKP delta-update sampler is now a vetted primitive (JVM baggage left behind; numba gives JVM-class speed in-process). CATALOG.md now captures the &quot;gold&quot; the registry YAML couldn&#39;t. Pushed all three commits to GitHub (origin/main @ 76f36ec); pinned commit 3ea1d4a confirmed reachable so the pin resolves. 139 tests pass.</p>
-  <p><strong>Next steps:</strong> (1) set-cover MH chain (scMhChain in the same Pub_SAA_PMIP_MC Java backend) -- deferred, same delta-update pattern, extract when a paper needs it; (2) optional: a generator emitting INDEX.md/CATALOG tables from functions.yaml to prevent doc drift (drift recurred this session); (3) standing workflow now recorded in memory -- check jr_optlib before any new optimization/sampling code, reuse or build-and-integrate.</p>
-  <p><strong>Git ref:</strong> 76f36ec</p>
+  <p><strong>Session:</strong> 2026-09-01 (recursive-logit support pruning)</p>
+  <p><strong>Agent:</strong> Codex GPT-5</p>
+  <p><strong>Goal:</strong> Permit recursive-logit active-set restriction without changing surviving action utilities.</p>
+  <p><strong>Outcome:</strong> Full library suite passes 148 tests. The solver now supports exact restriction of an existing recursive-logit model: removed alternatives lose their mass, while surviving `tau log q` utilities remain unchanged.</p>
+  <p><strong>Next steps:</strong> Sparse/cached linear systems remain the main library performance task. A global pruning-loss certificate requires path-length or occupancy information; a one-step local mass bound is insufficient.</p>
+  <p><strong>Git ref:</strong> -</p>
   <h3>Files touched</h3>
   <ul>
-  <li>`src/jr_optlib/transport/sinkhorn.py` -- replaced `X = diag(u) @ K @ diag(v)` with the broadcast outer rescaling `u[:,None]*K*v[None,:]` in both sinkhorn_balanced and _uv; ~10-30x faster on the reconstruction step, bit-for-bit identical (matmul only adds exact zeros), verified by the 18 migration cases.</li>
-  <li>`src/jr_optlib/sampling/sskp_mh.py` (new) -- SSKP chance-constrained delta-update MH chain: O(1) sufficient-statistic update per single-flip step; optional numba JIT (~51x over pure Python, bit-identical); pure-Python fallback. Formulation extracted from Pub_SAA_PMIP_MC&#39;s Java backend (JVM host NOT ported).</li>
-  <li>`src/jr_optlib/oracles/sskp.py` (new) -- delta_invariant (maintained stats/objective == full O(k) recompute; certificate) + penalty_reference (A&amp;S penalty vs scipy partial expectation) + certify_sskp_chain.</li>
-  <li>`tests/test_sskp_mh.py` (new) -- delta-invariant certify, python-vs-numba bit-identity, Boltzmann-distribution match, corrupted-stats catch.</li>
-  <li>`src/jr_optlib/sampling/__init__.py`, `src/jr_optlib/oracles/__init__.py` -- exports.</li>
-  <li>`registry/functions.yaml`, `registry/INDEX.md` -- registered sampling.sskp_mh_chain; also re-synced INDEX (had drifted: missing all choice/DP/RL/NLP/routing entries).</li>
-  <li>`pyproject.toml` -- added `fast-sampling` (numba) optional extra + numba in test deps.</li>
-  <li>`CATALOG.md` (new) -- problem-oriented, usage-first map of all 41 primitives, with pipelines, worked examples, and the paper&lt;-&gt;primitive feeder table.</li>
-  <li>`README.md` -- refreshed stale bits (16-&gt;139 tests, layout, status).</li>
-  <li>(outside repo) `Publikationer/Pub_MIPEntropy_MPC/code/requirements.txt` -- pinned `jr_optlib @ git+...@3ea1d4a` so the paper&#39;s Sinkhorn/IPF results freeze to this commit.</li>
+  <li>`src/jr_optlib/optimization/recursive_logit.py` -- explicit reference weights may now form subprobability rows after pruning; default unpruned rows remain normalized.</li>
+  <li>`tests/test_recursive_logit.py` -- added a pruning differential proving that fixed surviving weights raise the logsum cost, whereas renormalization would change the model.</li>
+  <li>`_ai_log.md` -- recorded the session.</li>
 </ul>
 </div>
 
@@ -178,6 +171,50 @@
 <p><strong>Outcome:</strong> Library audit: already well-vectorized; the one real win was the Sinkhorn reconstruction (bit-identical, now pinned into Pub<em>MIPEntropy</em>MPC -- the paper&#39;s repro already imports jr_optlib live, so the pin was the durable fix). SSKP delta-update sampler is now a vetted primitive (JVM baggage left behind; numba gives JVM-class speed in-process). CATALOG.md now captures the &quot;gold&quot; the registry YAML couldn&#39;t. Pushed all three commits to GitHub (origin/main @ 76f36ec); pinned commit 3ea1d4a confirmed reachable so the pin resolves. 139 tests pass.</p>
 <p><strong>Next steps:</strong> (1) set-cover MH chain (scMhChain in the same Pub<em>SAA</em>PMIP<em>MC Java backend) -- deferred, same delta-update pattern, extract when a paper needs it; (2) optional: a generator emitting INDEX.md/CATALOG tables from functions.yaml to prevent doc drift (drift recurred this session); (3) standing workflow now recorded in memory -- check jr</em>optlib before any new optimization/sampling code, reuse or build-and-integrate.</p>
 <p><strong>Git ref:</strong> 76f36ec</p>
+<h2>Session 2026-09-01 (recursive-logit baseline)</h2>
+<p><strong>Agent:</strong> Codex GPT-5</p>
+<p><strong>Goal:</strong> Add the established Fosgerau--Frejinger--Karlstrom recursive-logit assignment as a vetted route-free primitive and validate it against the Figure 5 benchmark.</p>
+<p><strong>Files touched:</strong></p>
+<ul>
+  <li>`src/jr_optlib/optimization/recursive_logit.py` -- NEW. Linear desirability solve, recursive policy, and expected edge-flow propagation for multiple OD pairs.</li>
+  <li>`src/jr_optlib/oracles/recursive_logit.py` -- NEW. Bellman, policy-normalization, conservation, and nonnegativity certificates.</li>
+  <li>`tests/test_recursive_logit.py` -- NEW. Exact DAG path differential, cyclic-network certificate, and multiple-OD conservation tests.</li>
+  <li>`src/jr_optlib/{optimization,oracles}/__init__.py`, `registry/functions.yaml`, `registry/INDEX.md`, `CATALOG.md` -- exports and explicit attribution/registration.</li>
+</ul>
+<p><strong>Outcome:</strong> The complete library suite passes: 146 tests, 0 failures. The primitive is identified as an implementation of Fosgerau, Frejinger and Karlstrom (2013), not a novel recursion. Its equal-outgoing-action reference probabilities enter as additive link utilities through `tau log q`.</p>
+<p><strong>Next steps:</strong> Add sparse/cached destination solves before metropolitan scale. Keep risk transformation and entropy-based active-set pruning as separate extensions, each with its own oracle.</p>
+<p><strong>Git ref:</strong> -</p>
+<br>
+<hr>
+<h2>Session 2026-09-01 (independent-Gaussian link risk)</h2>
+<p><strong>Agent:</strong> Codex GPT-5</p>
+<p><strong>Goal:</strong> Add the independent-Gaussian entropic link-cost transformation needed for the Figure 5 recursive-logit risk experiment.</p>
+<p><strong>Files touched:</strong></p>
+<ul>
+  <li>`src/jr_optlib/optimization/entropic_qp.py` -- added `gaussian_entropic_costs(mean, variance, eta)`.</li>
+  <li>`tests/test_optimization_entropic_qp.py` -- added exact eta-zero and route-aggregation tests against `rho_eta_formula`.</li>
+  <li>`src/jr_optlib/optimization/__init__.py`, `registry/functions.yaml`, `registry/INDEX.md`, `CATALOG.md` -- export and documentation.</li>
+  <li>`_ai_log.md` -- recorded the session.</li>
+</ul>
+<p><strong>Outcome:</strong> The transformation is exact at eta=0 and its sum over an arbitrary route incidence vector equals the full entropic-risk formula under diagonal covariance. The full library suite passes 147 tests, 0 failures.</p>
+<p><strong>Next steps:</strong> Correlated delays cannot use this elementwise transformation; treat them through an augmented disruption state or the full covariance criterion. Add sparse destination-cached recursive-logit solves before scale-up.</p>
+<p><strong>Git ref:</strong> -</p>
+<br>
+<hr>
+<h2>Session 2026-09-01 (recursive-logit support pruning)</h2>
+<p><strong>Agent:</strong> Codex GPT-5</p>
+<p><strong>Goal:</strong> Permit recursive-logit active-set restriction without changing surviving action utilities.</p>
+<p><strong>Files touched:</strong></p>
+<ul>
+  <li>`src/jr_optlib/optimization/recursive_logit.py` -- explicit reference weights may now form subprobability rows after pruning; default unpruned rows remain normalized.</li>
+  <li>`tests/test_recursive_logit.py` -- added a pruning differential proving that fixed surviving weights raise the logsum cost, whereas renormalization would change the model.</li>
+  <li>`_ai_log.md` -- recorded the session.</li>
+</ul>
+<p><strong>Outcome:</strong> Full library suite passes 148 tests. The solver now supports exact restriction of an existing recursive-logit model: removed alternatives lose their mass, while surviving `tau log q` utilities remain unchanged.</p>
+<p><strong>Next steps:</strong> Sparse/cached linear systems remain the main library performance task. A global pruning-loss certificate requires path-length or occupancy information; a one-step local mass bound is insufficient.</p>
+<p><strong>Git ref:</strong> -</p>
+<br>
+<hr>
 <br>
 
 </div>
@@ -269,6 +306,44 @@
 **Outcome:** Library audit: already well-vectorized; the one real win was the Sinkhorn reconstruction (bit-identical, now pinned into Pub_MIPEntropy_MPC -- the paper's repro already imports jr_optlib live, so the pin was the durable fix). SSKP delta-update sampler is now a vetted primitive (JVM baggage left behind; numba gives JVM-class speed in-process). CATALOG.md now captures the "gold" the registry YAML couldn't. Pushed all three commits to GitHub (origin/main @ 76f36ec); pinned commit 3ea1d4a confirmed reachable so the pin resolves. 139 tests pass.
 **Next steps:** (1) set-cover MH chain (scMhChain in the same Pub_SAA_PMIP_MC Java backend) -- deferred, same delta-update pattern, extract when a paper needs it; (2) optional: a generator emitting INDEX.md/CATALOG tables from functions.yaml to prevent doc drift (drift recurred this session); (3) standing workflow now recorded in memory -- check jr_optlib before any new optimization/sampling code, reuse or build-and-integrate.
 **Git ref:** 76f36ec
+## Session 2026-09-01 (recursive-logit baseline)
+**Agent:** Codex GPT-5
+**Goal:** Add the established Fosgerau--Frejinger--Karlstrom recursive-logit assignment as a vetted route-free primitive and validate it against the Figure 5 benchmark.
+**Files touched:**
+- `src/jr_optlib/optimization/recursive_logit.py` -- NEW. Linear desirability solve, recursive policy, and expected edge-flow propagation for multiple OD pairs.
+- `src/jr_optlib/oracles/recursive_logit.py` -- NEW. Bellman, policy-normalization, conservation, and nonnegativity certificates.
+- `tests/test_recursive_logit.py` -- NEW. Exact DAG path differential, cyclic-network certificate, and multiple-OD conservation tests.
+- `src/jr_optlib/{optimization,oracles}/__init__.py`, `registry/functions.yaml`, `registry/INDEX.md`, `CATALOG.md` -- exports and explicit attribution/registration.
+**Outcome:** The complete library suite passes: 146 tests, 0 failures. The primitive is identified as an implementation of Fosgerau, Frejinger and Karlstrom (2013), not a novel recursion. Its equal-outgoing-action reference probabilities enter as additive link utilities through `tau log q`.
+**Next steps:** Add sparse/cached destination solves before metropolitan scale. Keep risk transformation and entropy-based active-set pruning as separate extensions, each with its own oracle.
+**Git ref:** -
+
+---
+## Session 2026-09-01 (independent-Gaussian link risk)
+**Agent:** Codex GPT-5
+**Goal:** Add the independent-Gaussian entropic link-cost transformation needed for the Figure 5 recursive-logit risk experiment.
+**Files touched:**
+- `src/jr_optlib/optimization/entropic_qp.py` -- added `gaussian_entropic_costs(mean, variance, eta)`.
+- `tests/test_optimization_entropic_qp.py` -- added exact eta-zero and route-aggregation tests against `rho_eta_formula`.
+- `src/jr_optlib/optimization/__init__.py`, `registry/functions.yaml`, `registry/INDEX.md`, `CATALOG.md` -- export and documentation.
+- `_ai_log.md` -- recorded the session.
+**Outcome:** The transformation is exact at eta=0 and its sum over an arbitrary route incidence vector equals the full entropic-risk formula under diagonal covariance. The full library suite passes 147 tests, 0 failures.
+**Next steps:** Correlated delays cannot use this elementwise transformation; treat them through an augmented disruption state or the full covariance criterion. Add sparse destination-cached recursive-logit solves before scale-up.
+**Git ref:** -
+
+---
+## Session 2026-09-01 (recursive-logit support pruning)
+**Agent:** Codex GPT-5
+**Goal:** Permit recursive-logit active-set restriction without changing surviving action utilities.
+**Files touched:**
+- `src/jr_optlib/optimization/recursive_logit.py` -- explicit reference weights may now form subprobability rows after pruning; default unpruned rows remain normalized.
+- `tests/test_recursive_logit.py` -- added a pruning differential proving that fixed surviving weights raise the logsum cost, whereas renormalization would change the model.
+- `_ai_log.md` -- recorded the session.
+**Outcome:** Full library suite passes 148 tests. The solver now supports exact restriction of an existing recursive-logit model: removed alternatives lose their mass, while surviving `tau log q` utilities remain unchanged.
+**Next steps:** Sparse/cached linear systems remain the main library performance task. A global pruning-loss certificate requires path-length or occupancy information; a one-step local mass bound is insufficient.
+**Git ref:** -
+
+---
 </textarea>
 </div>
 

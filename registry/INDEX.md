@@ -40,6 +40,7 @@ Schema: `SCHEMA.md`.
 | `sampling.sskp_mh_chain` | SSKP chance-constrained MH, O(1) delta updates (opt. numba) | certify_sskp_chain (delta invariant + penalty ref) | yes | vetted |
 | `optimization.subgradient_dual_ascent` | Generic subgradient dual ascent | -- | no | vetted |
 | `optimization.rho_eta_formula` / `rho_eta_mc` | entropic (exponential) risk for Gaussian costs: closed form + Monte Carlo | certify_entropic_risk_mc (formula vs MC) | yes | vetted |
+| `optimization.gaussian_entropic_costs` | independent-Gaussian certainty-equivalent link costs | exact aggregation identity vs rho_eta_formula | yes | vetted |
 | `optimization.solve_qp` | convex QP over Birkhoff polytope (SLSQP, 3 starts) | certify_entropic_assignment (feasible+recompute+relaxation bound) | no | vetted |
 | `optimization.solve_hungarian_qp` / `solve_hungarian_rn` | exact assignment (independent / risk-neutral) via `linear_sum_assignment` | certify_entropic_assignment (brute-force optimum, small n) | yes | vetted |
 | `optimization.solve_miqp_gurobi` | correlated-case entropic-risk MIQP (Gurobi) | certify_entropic_assignment (brute-force optimum, small n) | yes | vetted |
@@ -47,6 +48,7 @@ Schema: `SCHEMA.md`.
 | `optimization.compute_logsum` | expected max utility (logsum) of a choice set | certify_mnl | no | vetted |
 | `optimization.compute_nested_logit_probabilities` | two-level nested logit probabilities | certify_nested_logit | no | vetted |
 | `optimization.compute_route_choice_shares` | SUE car+transit route-choice shares (direct + one-transfer) | -- | no | vetted |
+| `optimization.recursive_logit_assignment` | route-free recursive-logit assignment on a directed state graph | certify_recursive_logit | yes | vetted |
 | `optimization.backward_induction_solver` | finite-horizon stochastic DP (backward induction) | certify_dp_vs_brute_force | yes | vetted |
 | `optimization.contract_transitions` | DP expectation step (tensordot over exogenous transitions) | certify_transition_contraction | yes | vetted |
 | `optimization.solve_coord_wise` | coordinate-wise NLP block solve | verify_with_gurobi | no | vetted |

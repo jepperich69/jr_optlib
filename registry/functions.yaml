@@ -578,7 +578,8 @@
     rho_eta_mc, convex QP over the Birkhoff polytope solve_qp (SLSQP, 3 warm
     starts), exact independent-case Hungarian solve_hungarian_qp / risk-neutral
     solve_hungarian_rn (scipy linear_sum_assignment), and correlated-case MIQP
-    solve_miqp_gurobi. Helpers build_equicorrelation_cov and sample_costs.
+    solve_miqp_gurobi. Helpers include gaussian_entropic_costs for independent
+    link costs, build_equicorrelation_cov, and sample_costs.
   tags: [optimization, assignment, qp, miqp, hungarian, entropic-risk, saa, gurobi, scipy]
   status: vetted
   source: Pub_QP_SAA_MC/code/solvers.py + data.py (numerics-preserving migration)
@@ -592,8 +593,10 @@
     the diagonal case. Note: the paper's solve_hungarian_qp computed obj against
     the module-global mean matrix regardless of the passed C_bar; the migration
     uses the passed c_bar consistently (identical on the paper instance).
+    gaussian_entropic_costs is checked at eta=0 and against rho_eta_formula
+    for an arbitrary route incidence vector under diagonal covariance.
   module: jr_optlib.optimization.entropic_qp
-  signature: "rho_eta_formula / rho_eta_mc / solve_qp / solve_hungarian_qp / solve_hungarian_rn / solve_miqp_gurobi(c_bar, Sigma_c/sigma2, eta, ...) -> float | {x_opt, obj, ...}"
+  signature: "gaussian_entropic_costs / rho_eta_formula / rho_eta_mc / solve_qp / solve_hungarian_qp / solve_hungarian_rn / solve_miqp_gurobi(...)"
   oracles: [entropic_qp.certify_entropic_assignment, entropic_qp.certify_entropic_risk_mc]
   tests: tests/test_optimization_entropic_qp.py
   certifies: true
@@ -696,6 +699,25 @@
   oracles: [choice.certify_nested_logit]
   tests: tests/test_optimization_choice.py
   certifies: false
+
+- id: optimization.recursive_logit_assignment
+  name: Route-free recursive-logit assignment
+  kind: function
+  summary: Link/state-based entropy-regularized OD assignment without path enumeration.
+  tags: [optimization, routing, recursive-logit, entropy, kl, transit]
+  status: vetted
+  source: Fosgerau, Frejinger and Karlstrom (2013), TR-B 56, 70-80; benchmarked in Pub_NapstiGranularity_TBA
+  added: 2026-09-01
+  provenance: >
+    Implements the established recursive-logit linear desirability system and
+    expected-flow propagation. Certified by Bellman residual, local-policy
+    normalization, OD flow conservation, nonnegativity, and an exact
+    differential test against explicit path logit on a DAG.
+  module: jr_optlib.optimization.recursive_logit
+  signature: "recursive_logit_assignment(nodes, tails, heads, costs, origins, destinations, demand, tau, prior=None) -> RecursiveLogitResult"
+  oracles: [recursive_logit.certify_recursive_logit]
+  tests: tests/test_recursive_logit.py
+  certifies: true
 
 - id: optimization.backward_induction_solver
   name: Finite-horizon backward induction

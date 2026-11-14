@@ -116,6 +116,7 @@ Hungarian for the independent/risk-neutral cases, MIQP for correlated costs.
 | primitive | what it does | oracle |
 |---|---|---|
 | `optimization.rho_eta_formula` / `rho_eta_mc` | entropic risk of Gaussian cost: closed form + Monte-Carlo | `certify_entropic_risk_mc` (formula vs MC) |
+| `optimization.gaussian_entropic_costs` | independent-Gaussian link transformation `mean + eta*variance/2` | exact zero-limit and route aggregation vs `rho_eta_formula` |
 | `optimization.solve_qp` | convex QP over Birkhoff polytope (SLSQP, multi-start) | `certify_entropic_assignment` (feasible + recompute + relaxation bound) |
 | `optimization.solve_hungarian_qp` / `_rn` | exact assignment via `linear_sum_assignment` | `certify_entropic_assignment` (brute-force optimum, small n) |
 | `optimization.solve_miqp_gurobi` | correlated-case entropic-risk MIQP (Gurobi) | `certify_entropic_assignment` |
@@ -180,6 +181,7 @@ logit, and a full SUE route-choice model.
 | `optimization.compute_logsum` | expected max utility of a choice set | `certify_mnl` |
 | `optimization.compute_nested_logit_probabilities` | two-level nested logit (probs, nest, conditional) | `certify_nested_logit` |
 | `optimization.compute_route_choice_shares` | SUE car+transit (direct + one-transfer) route shares | — |
+| `optimization.recursive_logit_assignment` | Fosgerau--Frejinger--Karlstrom route-free link/state assignment; linear desirability and expected-flow systems | `certify_recursive_logit` (Bellman + policy + conservation + nonnegativity) |
 
 ---
 

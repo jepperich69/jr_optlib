@@ -55,6 +55,7 @@ from jr_optlib.oracles.dp import (
     certify_transition_contraction,
     certify_dp_vs_brute_force,
 )
+from jr_optlib.oracles.recursive_logit import certify_recursive_logit
 from jr_optlib.oracles.rl import certify_q_learning_vs_dp
 from jr_optlib.oracles.sskp import (
     certify_sskp_chain,
@@ -94,6 +95,7 @@ __all__ = [
     "certify_nested_logit",
     "certify_transition_contraction",
     "certify_dp_vs_brute_force",
+    "certify_recursive_logit",
     "certify_q_learning_vs_dp",
     "certify_sskp_chain",
     "delta_invariant",

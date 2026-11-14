@@ -79,3 +79,51 @@
 **Outcome:** Library audit: already well-vectorized; the one real win was the Sinkhorn reconstruction (bit-identical, now pinned into Pub_MIPEntropy_MPC -- the paper's repro already imports jr_optlib live, so the pin was the durable fix). SSKP delta-update sampler is now a vetted primitive (JVM baggage left behind; numba gives JVM-class speed in-process). CATALOG.md now captures the "gold" the registry YAML couldn't. Pushed all three commits to GitHub (origin/main @ 76f36ec); pinned commit 3ea1d4a confirmed reachable so the pin resolves. 139 tests pass.
 **Next steps:** (1) set-cover MH chain (scMhChain in the same Pub_SAA_PMIP_MC Java backend) -- deferred, same delta-update pattern, extract when a paper needs it; (2) optional: a generator emitting INDEX.md/CATALOG tables from functions.yaml to prevent doc drift (drift recurred this session); (3) standing workflow now recorded in memory -- check jr_optlib before any new optimization/sampling code, reuse or build-and-integrate.
 **Git ref:** 76f36ec
+## Session 2026-09-01 (recursive-logit baseline)
+**Agent:** Codex GPT-5
+**Goal:** Add the established Fosgerau--Frejinger--Karlstrom recursive-logit assignment as a vetted route-free primitive and validate it against the Figure 5 benchmark.
+**Files touched:**
+- `src/jr_optlib/optimization/recursive_logit.py` -- NEW. Linear desirability solve, recursive policy, and expected edge-flow propagation for multiple OD pairs.
+- `src/jr_optlib/oracles/recursive_logit.py` -- NEW. Bellman, policy-normalization, conservation, and nonnegativity certificates.
+- `tests/test_recursive_logit.py` -- NEW. Exact DAG path differential, cyclic-network certificate, and multiple-OD conservation tests.
+- `src/jr_optlib/{optimization,oracles}/__init__.py`, `registry/functions.yaml`, `registry/INDEX.md`, `CATALOG.md` -- exports and explicit attribution/registration.
+**Outcome:** The complete library suite passes: 146 tests, 0 failures. The primitive is identified as an implementation of Fosgerau, Frejinger and Karlstrom (2013), not a novel recursion. Its equal-outgoing-action reference probabilities enter as additive link utilities through `tau log q`.
+**Next steps:** Add sparse/cached destination solves before metropolitan scale. Keep risk transformation and entropy-based active-set pruning as separate extensions, each with its own oracle.
+**Git ref:** -
+
+---
+## Session 2026-09-01 (independent-Gaussian link risk)
+**Agent:** Codex GPT-5
+**Goal:** Add the independent-Gaussian entropic link-cost transformation needed for the Figure 5 recursive-logit risk experiment.
+**Files touched:**
+- `src/jr_optlib/optimization/entropic_qp.py` -- added `gaussian_entropic_costs(mean, variance, eta)`.
+- `tests/test_optimization_entropic_qp.py` -- added exact eta-zero and route-aggregation tests against `rho_eta_formula`.
+- `src/jr_optlib/optimization/__init__.py`, `registry/functions.yaml`, `registry/INDEX.md`, `CATALOG.md` -- export and documentation.
+- `_ai_log.md` -- recorded the session.
+**Outcome:** The transformation is exact at eta=0 and its sum over an arbitrary route incidence vector equals the full entropic-risk formula under diagonal covariance. The full library suite passes 147 tests, 0 failures.
+**Next steps:** Correlated delays cannot use this elementwise transformation; treat them through an augmented disruption state or the full covariance criterion. Add sparse destination-cached recursive-logit solves before scale-up.
+**Git ref:** -
+
+---
+## Session 2026-09-01 (recursive-logit support pruning)
+**Agent:** Codex GPT-5
+**Goal:** Permit recursive-logit active-set restriction without changing surviving action utilities.
+**Files touched:**
+- `src/jr_optlib/optimization/recursive_logit.py` -- explicit reference weights may now form subprobability rows after pruning; default unpruned rows remain normalized.
+- `tests/test_recursive_logit.py` -- added a pruning differential proving that fixed surviving weights raise the logsum cost, whereas renormalization would change the model.
+- `_ai_log.md` -- recorded the session.
+**Outcome:** Full library suite passes 148 tests. The solver now supports exact restriction of an existing recursive-logit model: removed alternatives lose their mass, while surviving `tau log q` utilities remain unchanged.
+**Next steps:** Sparse/cached linear systems remain the main library performance task. A global pruning-loss certificate requires path-length or occupancy information; a one-step local mass bound is insufficient.
+**Git ref:** -
+
+---
+
+## Session 2026-11-10 (IPF performance baseline)
+**Agent:** Codex
+**Goal:** Benchmark existing ipf_2d against the proposed scientific-code performance standard.
+**Files touched:**
+- `_ai_log.md` -- record only; no library source changed.
+- Evidence and runnable benchmark stored in `JR/AI_auto/drafts/ipf_benchmark/`; reusable template in `JR/AI_auto/prompts/numerical_benchmark_template.md`.
+**Outcome:** Five synthetic planted-answer workloads met marginal tolerance 1e-9 and relative cell-error tolerance 1e-7; 17 existing IPF tests passed. Retained NumPy median 0.095/0.473/33.199 ms for dense 32/256/1024 squared, with 16.10 MiB traced allocations for largest case excluding live inputs. Thread settings 1, Core Ultra 5 135U, NumPy 2.4.1. Measured baseline only: consumer speed/memory budgets unspecified. Negative control confirms silent iteration exhaustion requires caller validation. Zero seeds are epsilon-clamped, not exact structural zeros. General scaling-form oracle dense design is unsuitable for largest benchmark; planted exact answers used instead. Unrelated existing dirty files preserved.
+**Next steps:** See AI_auto benchmark REPORT.md. Clarify convergence and zero semantics compatibly; profile large workloads if consumer targets require improvement. No new accelerator dependency justified by this comparison with a diagnostic log-space reference.
+**Git ref:** HEAD 08eee8f; exact source hash in benchmark results.json; no commit.
